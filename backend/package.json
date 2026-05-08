@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-  "dev": "nodemon src/server.js",
-  "start": "node src/server.js",
-  "vercel-build": "npx expo export -p web"
-},
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "vercel-build": "npx expo export -p web"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
