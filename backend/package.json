@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js",
-    "vercel-build": "npx expo export -p web"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
