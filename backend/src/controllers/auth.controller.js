@@ -400,6 +400,31 @@ export const redirectPasswordReset = async (req, res) => {
   res.redirect(target.toString());
 };
 
+export const redirectMagicLink = async (req, res) => {
+  const { redirect, userId, secret } = req.query;
+
+  if (!redirect || typeof redirect !== "string") {
+    throw new ApiError(400, "A redirect URL is required.");
+  }
+
+  if (!userId || typeof userId !== "string" || !secret || typeof secret !== "string") {
+    throw new ApiError(400, "Magic link userId and secret are required.");
+  }
+
+  let target;
+
+  try {
+    target = new URL(redirect);
+  } catch {
+    throw new ApiError(400, "Redirect URL is invalid.");
+  }
+
+  target.searchParams.set("userId", userId);
+  target.searchParams.set("secret", secret);
+
+  res.redirect(target.toString());
+};
+
 export const completeOAuthLogin = async (req, res) => {
   const { userId, secret } = req.body;
 
@@ -548,4 +573,37 @@ export const updateCurrentUser = async (req, res) => {
 
   const profile = await buildProfilePayload(user);
   res.json(profile);
+};
+
+export const changeCurrentUserPassword = async (req, res) => {
+  const { password } = req.body;
+  const user = req.userDocument;
+
+  if (!password?.trim()) {
+    throw new ApiError(400, "A new password is required.");
+  }
+
+  if (password.trim().length < 8) {
+    throw new ApiError(400, "Password must be at least 8 characters long.");
+  }
+
+  if (!appwriteUsers) {
+    throw new ApiError(500, "Password updates are not configured.");
+  }
+
+  try {
+    await appwriteUsers.updatePassword(user.appwriteUserId, password.trim());
+    user.passwordHash = await hashPassword(password.trim());
+    await user.save();
+
+    res.json({
+      message: "Password updated successfully."
+    });
+  } catch (error) {
+    if (error instanceof AppwriteException) {
+      throw new ApiError(502, error.message);
+    }
+
+    throw error;
+  }
 };

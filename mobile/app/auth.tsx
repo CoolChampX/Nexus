@@ -78,6 +78,13 @@ const buildPasswordResetUrl = () => {
   )}`;
 };
 
+const buildMagicLinkUrl = () => {
+  const appRedirectUrl = buildCallbackUrl('magic');
+  const apiBaseUrl = forumApi.apiBaseUrl.replace(/\/$/, '');
+
+  return `${apiBaseUrl}/api/auth/magic-link/redirect?redirect=${encodeURIComponent(appRedirectUrl)}`;
+};
+
 export default function AuthScreen() {
   const { login, loginWithMagicLink, loginWithOAuth, ready, register, user } = useAuth();
   const { palette, resolvedScheme } = useAppearance();
@@ -414,7 +421,7 @@ export default function AuthScreen() {
       setMagicLinkLoading(true);
       await forumApi.requestMagicLink({
         email: email.trim(),
-        callbackUrl: buildCallbackUrl('magic'),
+        callbackUrl: buildMagicLinkUrl(),
       });
       animatedSetMagicLinkEmailSent(email.trim());
       Alert.alert(
@@ -450,10 +457,20 @@ export default function AuthScreen() {
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not send the password reset email';
+      const resetBaseUrl = process.env.EXPO_PUBLIC_RESET_BASE_URL?.trim();
+      const resetBaseHost = resetBaseUrl
+        ? (() => {
+            try {
+              return new URL(resetBaseUrl).host;
+            } catch {
+              return resetBaseUrl;
+            }
+          })()
+        : null;
       Alert.alert(
         'Could not continue',
-        /invalid url param/i.test(message)
-          ? 'Password reset needs a public reset URL. Set EXPO_PUBLIC_RESET_BASE_URL to your public backend URL and request a new reset email.'
+        /invalid url param|register your new client|web platform/i.test(message)
+          ? `Password reset needs your reset callback host registered in Appwrite as a Web platform.${resetBaseHost ? ` Add ${resetBaseHost} in Appwrite Console -> Project -> Platforms, then request a new reset email.` : ' Add your public reset URL host in Appwrite Console -> Project -> Platforms, then request a new reset email.'}`
           : message
       );
     } finally {
@@ -559,13 +576,12 @@ export default function AuthScreen() {
             <View style={styles.cardHeader}>
               <View style={styles.brandLockup}>
                 <NexusLogo compact inverted flushLeft />
-                <ThemedText style={[styles.brandCaption, { color: subtleText }]}>Developer community</ThemedText>
               </View>
               <Pressable
                 disabled={isSwitchingMode || isBusy}
                 onPress={toggleMode}
                 style={[styles.modeSwitchPill, { backgroundColor: socialPillBackground }]}>
-                <ThemedText style={[styles.modeSwitchText, { color: palette.text }]}>
+                <ThemedText numberOfLines={1} style={[styles.modeSwitchText, { color: palette.text }]}>
                   {mode === 'login' ? 'Sign up' : 'Log in'}
                 </ThemedText>
               </Pressable>
@@ -632,14 +648,17 @@ export default function AuthScreen() {
                 secureTextEntry
                 placeholder="password"
                 placeholderTextColor={subtleText}
-                style={[styles.inputField, { color: palette.text }]}
+                style={[styles.inputField, styles.passwordInputField, { color: palette.text }]}
               />
               {mode === 'login' ? (
                 <Pressable
                   disabled={recoveryLoading || isBusy}
                   onPress={() => void sendRecoveryLink()}
-                  style={[styles.inlineActionPill, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF' }]}>
-                  <ThemedText style={[styles.inlineActionText, { color: palette.accent }]}>
+                  style={[
+                    styles.inlineActionPill,
+                    { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#FFFFFF' },
+                  ]}>
+                  <ThemedText numberOfLines={1} style={[styles.inlineActionText, { color: palette.accent }]}>
                     {recoveryLoading ? 'Sending...' : 'Forgot password?'}
                   </ThemedText>
                 </Pressable>
@@ -650,7 +669,7 @@ export default function AuthScreen() {
               disabled={isBusy}
               onPress={submit}
               style={[styles.primaryButton, { backgroundColor: palette.accent, opacity: isBusy ? 0.72 : 1 }]}>
-              <ThemedText style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
+              <ThemedText numberOfLines={1} style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
                 {authSubmitting
                   ? mode === 'login'
                     ? 'Entering Nexus...'
@@ -666,7 +685,7 @@ export default function AuthScreen() {
                   onPress={() => void sendMagicLink()}
                   style={[styles.secondaryButton, { backgroundColor: pillBackground, borderColor: pillBorder }]}>
                   <MaterialCommunityIcons name="email-outline" size={18} color={palette.text} />
-                  <ThemedText style={[styles.secondaryButtonText, { color: palette.text }]}>
+                  <ThemedText numberOfLines={1} style={[styles.secondaryButtonText, { color: palette.text }]}>
                     {magicLinkLoading ? 'Sending sign-in link...' : 'Email me a sign-in link'}
                   </ThemedText>
                 </Pressable>
@@ -836,12 +855,15 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   brandLockup: {
+    flex: 1,
     gap: 2,
+    minWidth: 0,
   },
   cardHeader: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    minHeight: 52,
+    position: 'relative',
   },
   cardGlow: {
     borderRadius: 34,
@@ -886,17 +908,23 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   inlineActionPill: {
+    alignItems: 'center',
     borderRadius: 999,
+    flexShrink: 0,
+    minHeight: 34,
+    minWidth: 126,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
   inlineActionText: {
     fontSize: 11,
     fontWeight: '700',
+    textAlign: 'center',
   },
   inputField: {
     flex: 1,
     fontSize: 15,
+    minWidth: 0,
     paddingVertical: 2,
   },
   inputIconBubble: {
@@ -911,10 +939,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     marginTop: 12,
     minHeight: 54,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 10,
   },
   magicLinkHint: {
@@ -923,24 +951,37 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
+  passwordInputField: {
+    flexShrink: 1,
+    marginRight: 4,
+  },
   modeSwitchPill: {
+    alignItems: 'center',
     borderRadius: 999,
+    flexShrink: 0,
+    minWidth: 86,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   modeSwitchText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
+    textAlign: 'center',
   },
   primaryButton: {
     alignItems: 'center',
     borderRadius: 999,
     marginTop: 16,
+    minHeight: 54,
     paddingVertical: 16,
   },
   primaryButtonText: {
     fontSize: 15,
     fontWeight: '800',
+    textAlign: 'center',
   },
   screen: {
     flex: 1,
@@ -953,23 +994,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 14,
     borderRadius: 999,
+    minHeight: 52,
+    paddingHorizontal: 16,
     paddingVertical: 15,
   },
   secondaryButtonText: {
-    fontSize: 14,
+    flexShrink: 1,
+    fontSize: 13,
     fontWeight: '700',
+    textAlign: 'center',
   },
   socialPill: {
     alignItems: 'center',
     borderRadius: 999,
     borderWidth: 1,
+    flexShrink: 0,
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
+    minWidth: 94,
     paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingVertical: 8,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   socialPillText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   stage: {
@@ -986,8 +1036,7 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   utilityRow: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    minHeight: 44,
+    position: 'relative',
   },
 });

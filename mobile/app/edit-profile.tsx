@@ -28,6 +28,8 @@ export default function EditProfileScreen() {
   const [location, setLocation] = useState('');
   const [avatarImageUrl, setAvatarImageUrl] = useState('');
   const [bannerImageUrl, setBannerImageUrl] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const entrance = useRef(new Animated.Value(0)).current;
   const closingRef = useRef(false);
 
@@ -95,6 +97,7 @@ export default function EditProfileScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: target === 'banner' ? [16, 7] : [1, 1],
+      base64: true,
       quality: 0.9,
     });
 
@@ -102,7 +105,18 @@ export default function EditProfileScreen() {
       return;
     }
 
-    const nextUri = result.assets[0]?.uri ?? '';
+    const nextAsset = result.assets[0];
+
+    if (!nextAsset) {
+      return;
+    }
+
+    const nextUri =
+      nextAsset.base64 && nextAsset.mimeType
+        ? `data:${nextAsset.mimeType};base64,${nextAsset.base64}`
+        : nextAsset.base64
+          ? `data:image/jpeg;base64,${nextAsset.base64}`
+          : nextAsset.uri ?? '';
 
     if (target === 'banner') {
       setBannerImageUrl(nextUri);
@@ -115,6 +129,16 @@ export default function EditProfileScreen() {
   const saveProfile = async () => {
     try {
       setSaving(true);
+      if (newPassword.trim() || confirmPassword.trim()) {
+        if (newPassword.trim().length < 8) {
+          throw new Error('Use at least 8 characters for your new password.');
+        }
+
+        if (newPassword !== confirmPassword) {
+          throw new Error('Your new password and confirmation do not match.');
+        }
+      }
+
       await forumApi.updateCurrentUser({
         name,
         headline,
@@ -123,6 +147,13 @@ export default function EditProfileScreen() {
         avatarImageUrl,
         bannerImageUrl,
       });
+
+      if (newPassword.trim()) {
+        await forumApi.changeCurrentUserPassword({
+          password: newPassword,
+        });
+      }
+
       await refreshProfile();
       closeScreen();
     } catch (error) {
@@ -275,6 +306,26 @@ export default function EditProfileScreen() {
             value={location}
             onChangeText={setLocation}
             placeholder="Location"
+            placeholderTextColor={palette.muted}
+            style={[styles.input, { backgroundColor: palette.card, borderColor: cardBorder, color: palette.text }]}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText style={[styles.label, { color: palette.muted }]}>Set New Password</ThemedText>
+          <TextInput
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+            placeholder="new password"
+            placeholderTextColor={palette.muted}
+            style={[styles.input, { backgroundColor: palette.card, borderColor: cardBorder, color: palette.text }]}
+          />
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            placeholder="confirm new password"
             placeholderTextColor={palette.muted}
             style={[styles.input, { backgroundColor: palette.card, borderColor: cardBorder, color: palette.text }]}
           />

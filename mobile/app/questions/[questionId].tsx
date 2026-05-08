@@ -100,7 +100,7 @@ function AuthorIdentity({
       )}
       <View style={styles.identityCopy}>
         <ThemedText style={[styles.identityName, { color: palette.text }]}>{displayName}</ThemedText>
-        <ThemedText style={[styles.identityMeta, { color: palette.muted }]}>
+        <ThemedText numberOfLines={1} style={[styles.identityMeta, { color: palette.muted }]}>
           {displayEmail} - {formatDateTime(timestamp)}
         </ThemedText>
       </View>
@@ -234,7 +234,7 @@ function CommentThread({
               size={18}
               color={palette.accent}
             />
-            <ThemedText style={[styles.replyToggle, { color: palette.accent }]}>
+            <ThemedText numberOfLines={1} style={[styles.replyToggle, { color: palette.accent }]}>
               {expanded ? 'Hide replies' : `${comments.length} repl${comments.length === 1 ? 'y' : 'ies'}`}
             </ThemedText>
           </View>
@@ -260,7 +260,7 @@ function CommentThread({
         />
         <BouncyPressable onPress={onSubmit} scaleTo={0.95}>
           <View style={[styles.secondaryButton, { backgroundColor: palette.cardAlt }]}>
-            <ThemedText style={[styles.secondaryButtonText, { color: palette.text }]}>Reply</ThemedText>
+            <ThemedText numberOfLines={1} style={[styles.secondaryButtonText, { color: palette.text }]}>Reply</ThemedText>
           </View>
         </BouncyPressable>
       </View>
@@ -922,10 +922,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     gap: 12,
+    minWidth: 0,
   },
   answerCopy: {
     flex: 1,
     gap: 10,
+    minWidth: 0,
   },
   answerHeader: {
     flexDirection: 'row',
@@ -1071,9 +1073,11 @@ const styles = StyleSheet.create({
   identityCopy: {
     flex: 1,
     gap: 2,
+    minWidth: 0,
   },
   identityMeta: {
     fontSize: 12,
+    flexShrink: 1,
   },
   identityName: {
     fontSize: 14,
@@ -1087,6 +1091,7 @@ const styles = StyleSheet.create({
   inlineInput: {
     flex: 1,
     fontSize: 15,
+    minWidth: 0,
     paddingVertical: 0,
   },
   kicker: {
@@ -1163,6 +1168,7 @@ const styles = StyleSheet.create({
   replyToggle: {
     fontSize: 12,
     fontWeight: '800',
+    flexShrink: 1,
   },
   replyToggleRow: {
     alignItems: 'center',
@@ -1188,12 +1194,15 @@ const styles = StyleSheet.create({
   secondaryButton: {
     alignSelf: 'flex-start',
     borderRadius: 999,
-    paddingHorizontal: 13,
+    flexShrink: 0,
+    minWidth: 72,
+    paddingHorizontal: 14,
     paddingVertical: 9,
   },
   secondaryButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
+    textAlign: 'center',
   },
   smallMeta: {
     fontSize: 13,

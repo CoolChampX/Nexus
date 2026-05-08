@@ -192,6 +192,7 @@ export function QuestionAnswerPreviewCarousel({
           </ThemedText>
         </View>
         <BouncyPressable
+          style={styles.viewAllButton}
           hitSlop={8}
           onPress={() =>
             router.push({
@@ -199,7 +200,9 @@ export function QuestionAnswerPreviewCarousel({
               params: { questionId },
             })
           }>
-          <ThemedText style={[styles.viewAll, { color: palette.accent }]}>View all answers</ThemedText>
+          <ThemedText numberOfLines={1} style={[styles.viewAll, { color: palette.accent }]}>
+            View all answers
+          </ThemedText>
         </BouncyPressable>
       </View>
 
@@ -269,7 +272,7 @@ export function QuestionAnswerPreviewCarousel({
                     {answer.codeSnippet.trim() ? (
                       <View style={[styles.codeBadge, { backgroundColor: palette.cardAlt }]}>
                         <MaterialIcons name="code" size={14} color={palette.accent} />
-                        <ThemedText style={[styles.codeBadgeText, { color: palette.accent }]}>
+                        <ThemedText numberOfLines={1} style={[styles.codeBadgeText, { color: palette.accent }]}>
                           Includes code
                         </ThemedText>
                       </View>
@@ -404,11 +407,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     flexDirection: 'row',
     gap: 5,
+    minWidth: 112,
     paddingHorizontal: 9,
     paddingVertical: 6,
   },
   codeBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
   },
   emptyBody: {
@@ -434,11 +438,13 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    minHeight: 40,
+    width: '100%',
   },
   headerCopy: {
     flex: 1,
-    paddingRight: 12,
+    minWidth: 0,
+    paddingRight: 132,
   },
   indicatorActiveDot: {
     borderRadius: 999,
@@ -483,8 +489,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   viewAll: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
+  },
+  viewAllButton: {
+    alignSelf: 'flex-start',
+    flexShrink: 0,
+    minWidth: 112,
+    position: 'absolute',
+    right: 14,
+    top: 14,
+    zIndex: 1,
   },
   viewport: {
     marginTop: 12,
@@ -494,5 +509,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     padding: 14,
+    position: 'relative',
   },
 });

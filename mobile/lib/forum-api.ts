@@ -191,10 +191,22 @@ const request = async <T>(path: string, options: RequestOptions = {}) => {
   });
 
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data: unknown = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+  }
 
   if (!response.ok) {
-    throw new Error(data?.message ?? `Request failed with status ${response.status}`);
+    const message =
+      typeof data === 'object' && data !== null && 'message' in data && typeof data.message === 'string'
+        ? data.message
+        : text.trim() || `Request failed with status ${response.status}`;
+    throw new Error(message);
   }
 
   return data as T;
@@ -261,6 +273,12 @@ export const forumApi = {
   }) =>
     request<ProfileResponse>('/api/auth/me', {
       method: 'PUT',
+      body: payload,
+      auth: true,
+    }),
+  changeCurrentUserPassword: (payload: { password: string }) =>
+    request<{ message: string }>('/api/auth/me/password', {
+      method: 'POST',
       body: payload,
       auth: true,
     }),

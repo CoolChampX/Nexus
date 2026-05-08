@@ -322,7 +322,7 @@ export default function ProfileScreen() {
                 styles.activityToggleText,
                 { color: activeTab === 'questions' ? palette.textOnAccent : palette.muted },
               ]}>
-              Questions asked
+              Questions
             </ThemedText>
           </Pressable>
           <Pressable
@@ -336,7 +336,7 @@ export default function ProfileScreen() {
                 styles.activityToggleText,
                 { color: activeTab === 'answers' ? palette.textOnAccent : palette.muted },
               ]}>
-              Answers given
+              Answers
             </ThemedText>
           </Pressable>
         </View>
@@ -372,7 +372,7 @@ export default function ProfileScreen() {
                     </View>
                     <View style={styles.feedAuthorCopy}>
                       <ThemedText style={[styles.feedAuthorName, { color: palette.text }]}>{profile.name}</ThemedText>
-                      <ThemedText style={[styles.feedAuthorMeta, { color: palette.muted }]}>
+                      <ThemedText numberOfLines={1} style={[styles.feedAuthorMeta, { color: palette.muted }]}>
                         {profileEmail} | {formatFeedDate(question.createdAt)}
                       </ThemedText>
                     </View>
@@ -406,7 +406,7 @@ export default function ProfileScreen() {
                       {Math.max(question.voteScore, 0)} votes
                     </ThemedText>
                     <ThemedText style={[styles.questionPreviewStat, { color: palette.text }]}>
-                      {Math.max(question.answerCount ?? 0, 0)} answers
+                      {Math.max(question.answerCount ?? 0, 0)} repl{Math.max(question.answerCount ?? 0, 0) === 1 ? 'y' : 'ies'}
                     </ThemedText>
                   </View>
                   {question.tags.length ? (
@@ -450,10 +450,10 @@ export default function ProfileScreen() {
                     )}
                   </View>
                   <View style={styles.feedAuthorCopy}>
-                    <ThemedText style={[styles.feedAuthorName, { color: palette.text }]}>{profile.name}</ThemedText>
-                    <ThemedText style={[styles.feedAuthorMeta, { color: palette.muted }]}>
-                      {profileEmail} | {formatFeedDate(answer.createdAt)}
-                    </ThemedText>
+                      <ThemedText style={[styles.feedAuthorName, { color: palette.text }]}>{profile.name}</ThemedText>
+                      <ThemedText numberOfLines={1} style={[styles.feedAuthorMeta, { color: palette.muted }]}>
+                        {profileEmail} | {formatFeedDate(answer.createdAt)}
+                      </ThemedText>
                   </View>
                 </View>
                 <View style={styles.feedHeaderActions}>
@@ -482,10 +482,12 @@ export default function ProfileScreen() {
 
               <View style={[styles.questionPreview, { backgroundColor: palette.background, borderColor: cardBorder }]}>
                 <View style={styles.questionPreviewStats}>
-                  <ThemedText style={[styles.questionPreviewStat, { color: palette.text }]}>
+                  <ThemedText style={[styles.questionPreviewStat, styles.questionPreviewVoteText, { color: palette.text }]}>
                     {Math.max(answer.voteScore, 0)} votes
                   </ThemedText>
-                  <ThemedText style={[styles.questionPreviewStat, { color: palette.text }]}>
+                  <ThemedText
+                    numberOfLines={1}
+                    style={[styles.questionPreviewStat, styles.questionPreviewMetaText, { color: palette.text }]}>
                     asked by {answer.questionAuthorEmail || answer.questionAuthorId || 'community'}
                   </ThemedText>
                 </View>
@@ -517,11 +519,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 12,
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
     paddingVertical: 12,
   },
   activityToggleText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
+    textAlign: 'center',
   },
   answerLabel: {
     fontSize: 12,
@@ -632,7 +637,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   feedAuthorCopy: {
+    flex: 1,
     gap: 2,
+    minWidth: 0,
   },
   feedAuthorMeta: {
     fontSize: 13,
@@ -643,8 +650,10 @@ const styles = StyleSheet.create({
   },
   feedAuthorRow: {
     alignItems: 'center',
+    flex: 1,
     flexDirection: 'row',
     gap: 12,
+    minWidth: 0,
   },
   feedAvatar: {
     alignItems: 'center',
@@ -673,12 +682,15 @@ const styles = StyleSheet.create({
   feedHeader: {
     alignItems: 'center',
     flexDirection: 'row',
+    gap: 12,
     justifyContent: 'space-between',
   },
   feedHeaderActions: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexShrink: 0,
     gap: 8,
+    marginLeft: 'auto',
   },
   feedQuestionBody: {
     fontSize: 15,
@@ -804,8 +816,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   questionPreviewStats: {
+    alignItems: 'center',
     flexDirection: 'row',
     gap: 12,
+  },
+  questionPreviewMetaText: {
+    flex: 1,
+  },
+  questionPreviewVoteText: {
+    flexShrink: 0,
+    minWidth: 56,
   },
   questionsList: {
     gap: 14,

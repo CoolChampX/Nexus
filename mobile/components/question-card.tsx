@@ -216,13 +216,13 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
             <View style={styles.metaStat}>
               <MaterialIcons name="chat-bubble-outline" size={16} color={palette.muted} />
               <ThemedText style={[styles.metaStatText, { color: palette.muted }]}>
-                {answerCount}
+                {answerCount} answers
               </ThemedText>
             </View>
             <View style={styles.metaStat}>
               <MaterialIcons name="code" size={16} color={palette.muted} />
               <ThemedText style={[styles.metaStatText, { color: palette.muted }]}>
-                {question.codeSnippet.trim() ? 'Snippet' : 'Discussion'}
+                {question.codeSnippet.trim() ? 'Includes snippet' : 'Discussion only'}
               </ThemedText>
             </View>
           </View>
@@ -235,16 +235,21 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
 const styles = StyleSheet.create({
   answerPill: {
     borderRadius: 999,
+    alignSelf: 'flex-end',
+    marginLeft: 'auto',
+    minWidth: 88,
     paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingVertical: 6,
   },
   answerPillText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
+    textAlign: 'center',
   },
   authorCopy: {
     flex: 1,
     gap: 2,
+    minWidth: 0,
   },
   authorMeta: {
     fontSize: 12,
@@ -258,6 +263,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     gap: 12,
+    minWidth: 0,
   },
   avatarFallback: {
     alignItems: 'center',
@@ -281,16 +287,16 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   bodyColumn: {
-    gap: 8,
+    gap: 6,
   },
   card: {
     borderRadius: 24,
     borderWidth: 1,
-    gap: 14,
+    gap: 12,
     marginHorizontal: 16,
-    marginTop: 14,
+    marginTop: 12,
     overflow: 'hidden',
-    padding: 16,
+    padding: 14,
   },
   cardAccentGlow: {
     borderRadius: 999,
@@ -303,7 +309,7 @@ const styles = StyleSheet.create({
   codePreview: {
     backgroundColor: '#0F172A',
     borderRadius: 18,
-    padding: 12,
+    padding: 10,
   },
   codePreviewText: {
     color: '#DCE7F5',
@@ -312,16 +318,19 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   footer: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     borderTopWidth: 1,
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
     justifyContent: 'space-between',
-    paddingTop: 14,
+    paddingTop: 12,
   },
   header: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
+    justifyContent: 'space-between',
   },
   metaStat: {
     alignItems: 'center',
@@ -331,10 +340,14 @@ const styles = StyleSheet.create({
   metaStats: {
     alignItems: 'center',
     flexDirection: 'row',
+    marginLeft: 'auto',
+    flexShrink: 1,
+    flexWrap: 'wrap',
     gap: 14,
+    justifyContent: 'flex-end',
   },
   metaStatText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   title: {

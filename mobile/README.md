@@ -16,7 +16,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
-3. For password reset emails in development, set `EXPO_PUBLIC_RESET_BASE_URL` in `mobile/.env` to a public HTTPS URL that points to your backend, such as an ngrok URL.
+3. For password reset emails, set `EXPO_PUBLIC_RESET_BASE_URL` in `mobile/.env` to a public HTTPS URL that points to your backend, and register that same host as a `Web` platform in Appwrite.
 
    Example:
 
