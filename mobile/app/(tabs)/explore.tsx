@@ -331,7 +331,7 @@ export default function QuestionsScreen() {
             />
             <Pressable onPress={submitQuestion} style={[styles.primaryButton, { backgroundColor: palette.accent }]}>
               <ThemedText style={[styles.primaryButtonText, { color: palette.textOnAccent }]}>
-                {creating ? 'Publishing...' : 'Publish to Nexus'}
+                {creating ? 'Publishing...' : 'Publish'}
               </ThemedText>
             </Pressable>
           </View>
