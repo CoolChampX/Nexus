@@ -6,9 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/images/app-icon-dark.png",
     "splash": {
+      "image": "./assets/images/splash-icon.png",
       "backgroundColor": "#111827",
       "resizeMode": "contain",
       "dark": {
+        "image": "./assets/images/splash-icon.png",
         "backgroundColor": "#111827"
       }
     },
@@ -25,7 +27,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.nexus"
     },
     "web": {
       "output": "static",
@@ -36,8 +39,10 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/images/splash-icon.png",
           "backgroundColor": "#111827",
           "dark": {
+            "image": "./assets/images/splash-icon.png",
             "backgroundColor": "#111827"
           }
         }
