@@ -8,6 +8,7 @@ import {
   getCurrentUser,
   getOAuthUrl,
   loginUser,
+  redirectOAuth,
   redirectMagicLink,
   redirectPasswordReset,
   requestPasswordReset,
@@ -27,6 +28,7 @@ authRouter.get("/magic-link/redirect", asyncHandler(redirectMagicLink));
 authRouter.post("/password-reset", asyncHandler(requestPasswordReset));
 authRouter.get("/password-reset/redirect", asyncHandler(redirectPasswordReset));
 authRouter.get("/oauth/url", asyncHandler(getOAuthUrl));
+authRouter.get("/oauth/redirect", asyncHandler(redirectOAuth));
 authRouter.post("/oauth/appwrite", asyncHandler(completeOAuthLogin));
 authRouter.post("/magic-link/complete", asyncHandler(completeMagicLinkLogin));
 authRouter.post("/password-reset/complete", asyncHandler(completePasswordReset));

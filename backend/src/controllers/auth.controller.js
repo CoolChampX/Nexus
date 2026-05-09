@@ -255,12 +255,32 @@ export const getOAuthUrl = async (req, res) => {
     throw new ApiError(400, "A success callback URL is required.");
   }
 
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const protocol =
+    typeof forwardedProto === "string" && forwardedProto.trim()
+      ? forwardedProto.split(",")[0].trim()
+      : req.protocol;
+  const host = req.get("host");
+  const apiBaseUrl = host ? `${protocol}://${host}` : "";
+
+  if (!apiBaseUrl) {
+    throw new ApiError(500, "CLIENT_URL is not configured for OAuth redirects.");
+  }
+
+  const redirectBase = apiBaseUrl.replace(/\/$/, "");
+  const successRedirect = `${redirectBase}/api/auth/oauth/redirect?redirect=${encodeURIComponent(
+    success
+  )}&flow=oauth&provider=${encodeURIComponent(provider)}`;
+  const failureRedirect = `${redirectBase}/api/auth/oauth/redirect?redirect=${encodeURIComponent(
+    typeof failure === "string" ? failure : success
+  )}&flow=oauth&provider=${encodeURIComponent(provider)}`;
+
   try {
     const account = new Account(appwriteClient);
     const url = await account.createOAuth2Token(
       SOCIAL_PROVIDERS[provider],
-      success,
-      typeof failure === "string" ? failure : success
+      successRedirect,
+      failureRedirect
     );
 
     res.json({ url });
@@ -418,6 +438,50 @@ export const redirectMagicLink = async (req, res) => {
     target = new URL(redirect);
   } catch {
     throw new ApiError(400, "Redirect URL is invalid.");
+  }
+
+  target.searchParams.set("userId", userId);
+  target.searchParams.set("secret", secret);
+
+  res.redirect(target.toString());
+};
+
+export const redirectOAuth = async (req, res) => {
+  const { redirect, userId, secret, flow, provider, error, error_description } = req.query;
+
+  if (!redirect || typeof redirect !== "string") {
+    throw new ApiError(400, "A redirect URL is required.");
+  }
+
+  let target;
+
+  try {
+    target = new URL(redirect);
+  } catch {
+    throw new ApiError(400, "Redirect URL is invalid.");
+  }
+
+  if (typeof flow === "string" && flow.trim()) {
+    target.searchParams.set("flow", flow);
+  }
+
+  if (typeof provider === "string" && provider.trim()) {
+    target.searchParams.set("provider", provider);
+  }
+
+  if (typeof error === "string" && error.trim()) {
+    target.searchParams.set("error", error);
+
+    if (typeof error_description === "string" && error_description.trim()) {
+      target.searchParams.set("error_description", error_description);
+    }
+
+    res.redirect(target.toString());
+    return;
+  }
+
+  if (!userId || typeof userId !== "string" || !secret || typeof secret !== "string") {
+    throw new ApiError(400, "OAuth userId and secret are required.");
   }
 
   target.searchParams.set("userId", userId);
