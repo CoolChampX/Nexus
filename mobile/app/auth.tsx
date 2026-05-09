@@ -3,7 +3,7 @@ import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -289,7 +289,7 @@ export default function AuthScreen() {
     });
   };
 
-  const completeAuthFromUrl = useEffectEvent(async (url: string | null) => {
+  const completeAuthFromUrl = useCallback(async (url: string | null) => {
     if (!url) {
       return;
     }
@@ -343,7 +343,7 @@ export default function AuthScreen() {
     } finally {
       setSocialLoading(null);
     }
-  });
+  }, [loginWithOAuth, loginWithMagicLink]);
 
   useEffect(() => {
     void Linking.getInitialURL().then((url) => {
