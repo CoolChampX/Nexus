@@ -45,6 +45,7 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
     .slice(0, 2)
     .toUpperCase();
   const answerCount = Math.max(question.answerCount ?? 0, 0);
+  const answerCountLabel = `${answerCount} answer${answerCount === 1 ? '' : 's'}`;
   const voteScore = Math.max(question.voteScore, 0);
   const activeUpvote = question.currentUserVote === 1;
   const activeDownvote = question.currentUserVote === -1;
@@ -134,13 +135,15 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
 
         <View style={styles.header}>
           <View style={styles.authorRow}>
-            {avatarSource ? (
-              <Image source={avatarSource} contentFit="cover" style={styles.avatarImage} />
-            ) : (
-              <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]}>
-                <ThemedText style={styles.avatarText}>{initials}</ThemedText>
-              </View>
-            )}
+            <View style={[styles.avatarShell, { borderColor: palette.border }]}>
+              {avatarSource ? (
+                <Image source={avatarSource} contentFit="cover" style={styles.avatarImage} />
+              ) : (
+                <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]}>
+                  <ThemedText style={styles.avatarText}>{initials || '?'}</ThemedText>
+                </View>
+              )}
+            </View>
 
             <View style={styles.authorCopy}>
               <ThemedText style={[styles.authorName, { color: palette.text }]}>{authorName}</ThemedText>
@@ -152,7 +155,7 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
 
           <View style={[styles.answerPill, { backgroundColor: palette.accentSoft }]}>
             <ThemedText style={[styles.answerPillText, { color: palette.accent }]}>
-              {answerCount} answers
+              {answerCountLabel}
             </ThemedText>
           </View>
         </View>
@@ -216,7 +219,7 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
             <View style={styles.metaStat}>
               <MaterialIcons name="chat-bubble-outline" size={16} color={palette.muted} />
               <ThemedText style={[styles.metaStatText, { color: palette.muted }]}>
-                {answerCount} answers
+                {answerCountLabel}
               </ThemedText>
             </View>
             <View style={styles.metaStat}>
@@ -276,6 +279,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     height: 48,
     width: 48,
+  },
+  avatarShell: {
+    borderRadius: 999,
+    borderWidth: 1,
+    flexShrink: 0,
+    overflow: 'hidden',
   },
   avatarText: {
     color: '#FFFFFF',

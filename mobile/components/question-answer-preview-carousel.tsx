@@ -191,19 +191,21 @@ export function QuestionAnswerPreviewCarousel({
             {loading ? 'Loading answers...' : answers.length ? 'Highest-voted replies' : 'No answers yet'}
           </ThemedText>
         </View>
-        <BouncyPressable
-          style={styles.viewAllButton}
-          hitSlop={8}
-          onPress={() =>
-            router.push({
-              pathname: '/questions/[questionId]',
-              params: { questionId },
-            })
-          }>
-          <ThemedText numberOfLines={1} style={[styles.viewAll, { color: palette.accent }]}>
-            View all answers
-          </ThemedText>
-        </BouncyPressable>
+        <View style={styles.headerAction}>
+          <BouncyPressable
+            style={styles.viewAllButton}
+            hitSlop={8}
+            onPress={() =>
+              router.push({
+                pathname: '/questions/[questionId]',
+                params: { questionId },
+              })
+            }>
+            <ThemedText numberOfLines={1} style={[styles.viewAll, { color: palette.accent }]}>
+              View all answers
+            </ThemedText>
+          </BouncyPressable>
+        </View>
       </View>
 
       {answers.length ? (
@@ -237,24 +239,26 @@ export function QuestionAnswerPreviewCarousel({
                     ]}>
                     <View style={styles.answerHeader}>
                       <View style={styles.answerIdentity}>
-                        {answer.author?.avatarImageUrl?.trim() ? (
-                          <Image
-                            source={answer.author.avatarImageUrl}
-                            contentFit="cover"
-                            style={styles.avatar}
-                          />
-                        ) : (
-                          <View style={[styles.avatarFallback, { backgroundColor: palette.accentSoft }]}>
-                            <ThemedText style={[styles.avatarInitials, { color: palette.accent }]}>
-                              {(answer.author?.name?.trim() || answer.authorId)
-                                .split(' ')
-                                .map((part) => part[0])
-                                .join('')
-                                .slice(0, 2)
-                                .toUpperCase()}
-                            </ThemedText>
-                          </View>
-                        )}
+                        <View style={[styles.avatarShell, { borderColor: palette.border }]}>
+                          {answer.author?.avatarImageUrl?.trim() ? (
+                            <Image
+                              source={answer.author.avatarImageUrl}
+                              contentFit="cover"
+                              style={styles.avatar}
+                            />
+                          ) : (
+                            <View style={[styles.avatarFallback, { backgroundColor: palette.accentSoft }]}>
+                              <ThemedText style={[styles.avatarInitials, { color: palette.accent }]}>
+                                {(answer.author?.name?.trim() || answer.authorId)
+                                  .split(' ')
+                                  .map((part) => part[0])
+                                  .join('')
+                                  .slice(0, 2)
+                                  .toUpperCase() || '?'}
+                              </ThemedText>
+                            </View>
+                          )}
+                        </View>
                       </View>
                       <View style={styles.answerMeta}>
                         <ThemedText numberOfLines={1} style={[styles.answerAuthor, { color: palette.text }]}>
@@ -363,6 +367,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 34,
   },
+  avatarShell: {
+    borderRadius: 999,
+    borderWidth: 1,
+    flexShrink: 0,
+    overflow: 'hidden',
+  },
   avatarInitials: {
     fontSize: 11,
     fontWeight: '900',
@@ -436,15 +446,21 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   header: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexDirection: 'row',
-    minHeight: 40,
+    justifyContent: 'space-between',
+    minHeight: 44,
     width: '100%',
+  },
+  headerAction: {
+    alignItems: 'flex-end',
+    alignSelf: 'flex-start',
+    flexShrink: 0,
+    marginLeft: 12,
   },
   headerCopy: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 132,
   },
   indicatorActiveDot: {
     borderRadius: 999,
@@ -495,11 +511,8 @@ const styles = StyleSheet.create({
   viewAllButton: {
     alignSelf: 'flex-start',
     flexShrink: 0,
+    marginTop: 2,
     minWidth: 112,
-    position: 'absolute',
-    right: 14,
-    top: 14,
-    zIndex: 1,
   },
   viewport: {
     marginTop: 12,
