@@ -24,6 +24,7 @@ Create `.env` from `.env.example` and add:
 
 - MongoDB URI
 - Appwrite endpoint, project, API key
+- `PUBLIC_BACKEND_URL` set to your deployed backend origin for OAuth redirects, for example `https://nexusbackdev.vercel.app`
 - Enable the `GitHub` and `Google` OAuth providers in Appwrite if you want social login
 - Gemini API key
 - Optional `GEMINI_MODEL` override for the explainer

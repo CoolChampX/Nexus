@@ -5,6 +5,7 @@ dotenv.config();
 export const env = {
   port: process.env.PORT || 5000,
   clientUrl: process.env.CLIENT_URL || "http://localhost:8081",
+  publicBackendUrl: process.env.PUBLIC_BACKEND_URL || "",
   mongodbUri: process.env.MONGODB_URI || "",
   mongodbUriFallback: process.env.MONGODB_URI_FALLBACK || "",
   appwriteEndpoint: process.env.APPWRITE_ENDPOINT || "",

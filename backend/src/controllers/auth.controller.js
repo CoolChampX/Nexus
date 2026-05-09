@@ -49,6 +49,21 @@ const buildAuthResponse = async (user) => ({
   session: await createUserSession(user.userId)
 });
 
+const getPublicRequestBaseUrl = (req) => {
+  if (env.publicBackendUrl?.trim()) {
+    return env.publicBackendUrl.trim().replace(/\/$/, "");
+  }
+
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const protocol =
+    typeof forwardedProto === "string" && forwardedProto.trim()
+      ? forwardedProto.split(",")[0].trim()
+      : req.protocol;
+  const host = req.get("host");
+
+  return host ? `${protocol}://${host}` : "";
+};
+
 const buildProfilePayload = async (user) => {
   const [questionCount, answerCount, commentCount, recentQuestions, recentAnswers] = await Promise.all([
     Question.countDocuments({ authorId: user.userId }),
@@ -258,23 +273,16 @@ export const getOAuthUrl = async (req, res) => {
     throw new ApiError(400, "A success callback URL is required.");
   }
 
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  const protocol =
-    typeof forwardedProto === "string" && forwardedProto.trim()
-      ? forwardedProto.split(",")[0].trim()
-      : req.protocol;
-  const host = req.get("host");
-  const apiBaseUrl = host ? `${protocol}://${host}` : "";
+  const apiBaseUrl = getPublicRequestBaseUrl(req);
 
   if (!apiBaseUrl) {
-    throw new ApiError(500, "CLIENT_URL is not configured for OAuth redirects.");
+    throw new ApiError(500, "PUBLIC_BACKEND_URL is not configured for OAuth redirects.");
   }
 
-  const redirectBase = apiBaseUrl.replace(/\/$/, "");
-  const successRedirect = `${redirectBase}/api/auth/oauth/redirect?redirect=${encodeURIComponent(
+  const successRedirect = `${apiBaseUrl}/api/auth/oauth/redirect?redirect=${encodeURIComponent(
     success
   )}&flow=oauth&provider=${encodeURIComponent(provider)}`;
-  const failureRedirect = `${redirectBase}/api/auth/oauth/redirect?redirect=${encodeURIComponent(
+  const failureRedirect = `${apiBaseUrl}/api/auth/oauth/redirect?redirect=${encodeURIComponent(
     typeof failure === "string" ? failure : success
   )}&flow=oauth&provider=${encodeURIComponent(provider)}`;
 

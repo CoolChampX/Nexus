@@ -32,6 +32,8 @@ WebBrowser.maybeCompleteAuthSession();
 const appwriteCallbackScheme =
   (Constants.expoConfig?.scheme as string | undefined) || 'appwrite-callback-69e5cba40023fbdf246f';
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
+const socialAuthRequiresDevBuildMessage =
+  'GitHub and Google sign-in need a development build or standalone app. Expo Go cannot reliably return OAuth redirects back into this project.';
 const LOGIN_LOADING_MESSAGES = [
   'Logging into future visuals...',
   'Syncing your threads and signals...',
@@ -379,6 +381,11 @@ export default function AuthScreen() {
   };
 
   const continueWithOAuth = async (provider: SocialProvider) => {
+    if (isExpoGo) {
+      Alert.alert('Use a development build', socialAuthRequiresDevBuildMessage);
+      return;
+    }
+
     try {
       setSocialLoading(provider);
       pendingOAuthProviderRef.current = provider;
@@ -638,6 +645,11 @@ export default function AuthScreen() {
                 );
               })}
             </View>
+            {isExpoGo ? (
+              <ThemedText style={[styles.helperText, { color: subtleText }]}>
+                Social sign-in works in a development build, not Expo Go.
+              </ThemedText>
+            ) : null}
 
             {mode === 'register' ? (
               <View style={[styles.inputShell, { backgroundColor: pillBackground, borderColor: pillBorder }]}>
@@ -941,6 +953,13 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 14,
     marginTop: 18,
+  },
+  helperText: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 6,
+    marginTop: 8,
+    textAlign: 'center',
   },
   inlineActionPill: {
     alignItems: 'center',
