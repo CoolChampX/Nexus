@@ -3,6 +3,7 @@ import { Answer } from "../models/Answer.js";
 import { Comment } from "../models/Comment.js";
 import { Vote } from "../models/Vote.js";
 import { User } from "../models/User.js";
+import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
 import { deleteNotificationsForQuestion } from "../services/notification.service.js";
 
@@ -17,14 +18,14 @@ const buildQuestionPayload = (question, { answerCount = 0, author = null, curren
         id: author.userId,
         name: author.name,
         email: author.email,
-        avatarImageUrl: author.avatarImageUrl,
-        avatarColor: author.avatarColor
+        avatarImageUrl: buildAvatarImageUrl(author.name, author.avatarColor, author.avatarImageUrl),
+        avatarColor: resolveAvatarColor(author.avatarColor)
       }
     : {
         id: question.authorId,
         name: question.authorId,
         email: "",
-        avatarImageUrl: "",
+        avatarImageUrl: buildAvatarImageUrl(question.authorId, "#F48024"),
         avatarColor: "#F48024"
       },
   currentUserVote

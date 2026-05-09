@@ -1,6 +1,7 @@
 import { Comment } from "../models/Comment.js";
 import { Answer } from "../models/Answer.js";
 import { User } from "../models/User.js";
+import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
 import { createCommentNotifications } from "../services/notification.service.js";
 
@@ -17,14 +18,14 @@ const buildCommentPayload = (comment, { author = null, questionId = null, answer
         id: author.userId,
         name: author.name,
         email: author.email,
-        avatarImageUrl: author.avatarImageUrl,
-        avatarColor: author.avatarColor
+        avatarImageUrl: buildAvatarImageUrl(author.name, author.avatarColor, author.avatarImageUrl),
+        avatarColor: resolveAvatarColor(author.avatarColor)
       }
     : {
         id: comment.authorId,
         name: comment.authorId,
         email: "",
-        avatarImageUrl: "",
+        avatarImageUrl: buildAvatarImageUrl(comment.authorId, "#F48024"),
         avatarColor: "#F48024"
       }
 });

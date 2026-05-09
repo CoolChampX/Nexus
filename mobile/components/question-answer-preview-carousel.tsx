@@ -448,19 +448,20 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'flex-start',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     minHeight: 44,
+    position: 'relative',
     width: '100%',
   },
   headerAction: {
     alignItems: 'flex-end',
-    alignSelf: 'flex-start',
-    flexShrink: 0,
-    marginLeft: 12,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   headerCopy: {
     flex: 1,
     minWidth: 0,
+    paddingRight: 124,
   },
   indicatorActiveDot: {
     borderRadius: 999,
@@ -509,8 +510,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   viewAllButton: {
-    alignSelf: 'flex-start',
-    flexShrink: 0,
     marginTop: 2,
     minWidth: 112,
   },

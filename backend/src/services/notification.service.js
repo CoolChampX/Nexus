@@ -3,6 +3,7 @@ import { Comment } from "../models/Comment.js";
 import { Notification } from "../models/Notification.js";
 import { Question } from "../models/Question.js";
 import { User } from "../models/User.js";
+import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 
 const EMAIL_REGEX = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 const HANDLE_REGEX = /@([a-z0-9._-]+)/gi;
@@ -198,8 +199,8 @@ export const buildNotificationPayloads = async (notifications) => {
             id: actor.userId,
             name: actor.name,
             email: actor.email,
-            avatarImageUrl: actor.avatarImageUrl,
-            avatarColor: actor.avatarColor
+            avatarImageUrl: buildAvatarImageUrl(actor.name, actor.avatarColor, actor.avatarImageUrl),
+            avatarColor: resolveAvatarColor(actor.avatarColor)
           }
         : null
     };

@@ -237,9 +237,10 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
 
 const styles = StyleSheet.create({
   answerPill: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
     borderRadius: 999,
-    alignSelf: 'flex-end',
-    marginLeft: 'auto',
     minWidth: 88,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -267,6 +268,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     minWidth: 0,
+    paddingRight: 100,
   },
   avatarFallback: {
     alignItems: 'center',
@@ -338,8 +340,8 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'flex-start',
     flexDirection: 'row',
-    gap: 12,
-    justifyContent: 'space-between',
+    minHeight: 52,
+    position: 'relative',
   },
   metaStat: {
     alignItems: 'center',

@@ -6,6 +6,7 @@ import { Answer } from "../models/Answer.js";
 import { Comment } from "../models/Comment.js";
 import { Question } from "../models/Question.js";
 import { User } from "../models/User.js";
+import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 
@@ -34,9 +35,9 @@ const buildAuthPayload = (user) => ({
   bio: user.bio,
   location: user.location,
   website: user.website,
-  avatarImageUrl: user.avatarImageUrl,
+  avatarImageUrl: buildAvatarImageUrl(user.name, user.avatarColor, user.avatarImageUrl),
   bannerImageUrl: user.bannerImageUrl,
-  avatarColor: user.avatarColor,
+  avatarColor: resolveAvatarColor(user.avatarColor),
   preferredTags: user.preferredTags,
   joinedAt: user.createdAt
 });

@@ -860,6 +860,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
     minWidth: 0,
+    paddingRight: 102,
   },
   cardHeader: {
     alignItems: 'center',
@@ -960,7 +961,6 @@ const styles = StyleSheet.create({
   modeSwitchPill: {
     alignItems: 'center',
     borderRadius: 999,
-    flexShrink: 0,
     minWidth: 86,
     paddingHorizontal: 14,
     paddingVertical: 9,
@@ -1010,7 +1010,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 999,
     borderWidth: 1,
-    flexShrink: 0,
     flexDirection: 'row',
     gap: 6,
     minWidth: 94,
@@ -1038,7 +1037,8 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   utilityRow: {
-    minHeight: 44,
+    minHeight: 40,
+    paddingRight: 104,
     position: 'relative',
   },
 });

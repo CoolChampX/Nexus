@@ -2,6 +2,7 @@ import { Answer } from "../models/Answer.js";
 import { Comment } from "../models/Comment.js";
 import { Vote } from "../models/Vote.js";
 import { User } from "../models/User.js";
+import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
   createAnswerNotifications,
@@ -18,14 +19,14 @@ const buildAnswerPayload = (answer, author = null) => ({
         id: author.userId,
         name: author.name,
         email: author.email,
-        avatarImageUrl: author.avatarImageUrl,
-        avatarColor: author.avatarColor
+        avatarImageUrl: buildAvatarImageUrl(author.name, author.avatarColor, author.avatarImageUrl),
+        avatarColor: resolveAvatarColor(author.avatarColor)
       }
     : {
         id: answer.authorId,
         name: answer.authorId,
         email: "",
-        avatarImageUrl: "",
+        avatarImageUrl: buildAvatarImageUrl(answer.authorId, "#F48024"),
         avatarColor: "#F48024"
       }
 });
