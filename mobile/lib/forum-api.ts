@@ -105,7 +105,19 @@ export type AuthUser = {
   joinedAt: string;
 };
 
-export type SocialProvider = 'github';
+export type AuthSession = {
+  token: string;
+  expiresAt: string;
+};
+
+export type AuthResponse = {
+  user: AuthUser;
+  session: AuthSession;
+};
+
+export const SOCIAL_PROVIDERS = ['github', 'google'] as const;
+
+export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
 
 export type ProfileAnswer = Answer & {
   questionTitle: string;
@@ -158,11 +170,17 @@ const detectApiBaseUrl = () => {
 export const API_BASE_URL = detectApiBaseUrl();
 
 let currentUserId = DEMO_USER_ID;
+let currentSessionToken = '';
 
 export const getApiUserId = () => currentUserId;
+export const getApiSessionToken = () => currentSessionToken;
 
 export const setApiUserId = (value: string) => {
   currentUserId = value.trim() || DEMO_USER_ID;
+};
+
+export const setApiSessionToken = (value: string) => {
+  currentSessionToken = value.trim();
 };
 
 type RequestOptions = {
@@ -181,7 +199,13 @@ const request = async <T>(path: string, options: RequestOptions = {}) => {
   }
 
   if (options.auth) {
-    headers['x-user-id'] = getApiUserId();
+    const token = getApiSessionToken();
+
+    if (!token) {
+      throw new Error('Not authenticated.');
+    }
+
+    headers.Authorization = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -216,12 +240,12 @@ export const forumApi = {
   apiBaseUrl: API_BASE_URL,
   health: () => request<{ status: string; service: string }>('/health'),
   register: (payload: { name: string; email: string; password: string }) =>
-    request<{ user: AuthUser }>('/api/auth/register', {
+    request<AuthResponse>('/api/auth/register', {
       method: 'POST',
       body: payload,
     }),
   login: (payload: { email: string; password: string }) =>
-    request<{ user: AuthUser }>('/api/auth/login', {
+    request<AuthResponse>('/api/auth/login', {
       method: 'POST',
       body: payload,
     }),
@@ -247,14 +271,19 @@ export const forumApi = {
       )}&failure=${encodeURIComponent(failure)}`
     ),
   completeOAuthLogin: (payload: { userId: string; secret: string }) =>
-    request<{ user: AuthUser }>('/api/auth/oauth/appwrite', {
+    request<AuthResponse>('/api/auth/oauth/appwrite', {
       method: 'POST',
       body: payload,
     }),
   completeMagicLinkLogin: (payload: { userId: string; secret: string }) =>
-    request<{ user: AuthUser }>('/api/auth/magic-link/complete', {
+    request<AuthResponse>('/api/auth/magic-link/complete', {
       method: 'POST',
       body: payload,
+    }),
+  logout: () =>
+    request<{ message: string }>('/api/auth/logout', {
+      method: 'POST',
+      auth: true,
     }),
   getCurrentUser: () =>
     request<ProfileResponse>('/api/auth/me', {

@@ -73,7 +73,7 @@ const hydrateQuestions = async (questions, currentUserId) => {
 
 export const listQuestions = async (req, res) => {
   const questions = await Question.find().sort({ createdAt: -1 }).limit(50).lean();
-  const payload = await hydrateQuestions(questions, req.header("x-user-id"));
+  const payload = await hydrateQuestions(questions, req.user?.id || null);
   res.json(payload);
 };
 
@@ -95,7 +95,7 @@ export const getQuestionById = async (req, res) => {
     throw new ApiError(404, "Question not found");
   }
 
-  const [payload] = await hydrateQuestions([question], req.header("x-user-id"));
+  const [payload] = await hydrateQuestions([question], req.user?.id || null);
 
   res.json(payload);
 };

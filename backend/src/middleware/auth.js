@@ -1,16 +1,26 @@
 import { ApiError } from "../utils/ApiError.js";
+import { findValidSession } from "../utils/session.js";
 import { User } from "../models/User.js";
 
-// This placeholder keeps Express routes protected until Appwrite JWT/session
-// validation is wired with the mobile client.
 export const requireAuth = async (req, _res, next) => {
-  const userId = req.header("x-user-id");
+  const authorizationHeader = req.header("authorization");
+  const bearerPrefix = "Bearer ";
+  const token =
+    typeof authorizationHeader === "string" && authorizationHeader.startsWith(bearerPrefix)
+      ? authorizationHeader.slice(bearerPrefix.length).trim()
+      : "";
 
-  if (!userId) {
+  if (!token) {
     return next(new ApiError(401, "Unauthorized"));
   }
 
-  const user = await User.findOne({ userId });
+  const session = await findValidSession(token);
+
+  if (!session) {
+    return next(new ApiError(401, "Session expired or invalid."));
+  }
+
+  const user = await User.findOne({ userId: session.userId });
 
   if (!user) {
     return next(new ApiError(401, "User not found."));
@@ -22,6 +32,7 @@ export const requireAuth = async (req, _res, next) => {
     email: user.email
   };
   req.userDocument = user;
+  req.authSession = session;
 
   next();
 };

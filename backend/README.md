@@ -24,6 +24,7 @@ Create `.env` from `.env.example` and add:
 
 - MongoDB URI
 - Appwrite endpoint, project, API key
+- Enable the `GitHub` and `Google` OAuth providers in Appwrite if you want social login
 - Gemini API key
 - Optional `GEMINI_MODEL` override for the explainer
 

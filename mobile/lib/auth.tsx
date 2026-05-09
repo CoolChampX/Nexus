@@ -9,7 +9,14 @@ import {
   useState,
 } from 'react';
 
-import { forumApi, type AuthUser, type SocialProvider, setApiUserId } from './forum-api';
+import {
+  forumApi,
+  type AuthResponse,
+  type AuthUser,
+  type SocialProvider,
+  setApiSessionToken,
+  setApiUserId,
+} from './forum-api';
 
 type AuthContextValue = {
   ready: boolean;
@@ -23,20 +30,22 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const AUTH_STORAGE_KEY = 'nexus.auth.user';
+const AUTH_STORAGE_KEY = 'nexus.auth.session';
 const GUEST_USER_ID = 'guest-user';
+
+type StoredAuthSession = AuthResponse;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
 
-  const persistUser = async (nextUser: AuthUser | null) => {
-    if (!nextUser) {
+  const persistAuth = async (nextAuth: StoredAuthSession | null) => {
+    if (!nextAuth) {
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
       return;
     }
 
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextAuth));
   };
 
   const refreshProfile = async () => {
@@ -50,7 +59,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     startTransition(() => {
       setUser(profile);
     });
-    await persistUser(profile);
+
+    const storedAuthJson = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+
+    if (!storedAuthJson) {
+      await persistAuth(null);
+      return;
+    }
+
+    const storedAuth = JSON.parse(storedAuthJson) as StoredAuthSession;
+    await persistAuth({
+      ...storedAuth,
+      user: profile,
+    });
   };
 
   const login = async ({ email, password }: { email: string; password: string }) => {
@@ -60,10 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     startTransition(() => {
+      setApiSessionToken(response.session.token);
       setApiUserId(response.user.id);
       setUser(response.user);
     });
-    await persistUser(response.user);
+    await persistAuth(response);
   };
 
   const register = async ({
@@ -82,10 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     startTransition(() => {
+      setApiSessionToken(response.session.token);
       setApiUserId(response.user.id);
       setUser(response.user);
     });
-    await persistUser(response.user);
+    await persistAuth(response);
   };
 
   const loginWithOAuth = async ({
@@ -103,10 +126,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     startTransition(() => {
+      setApiSessionToken(response.session.token);
       setApiUserId(response.user.id);
       setUser(response.user);
     });
-    await persistUser(response.user);
+    await persistAuth(response);
   };
 
   const loginWithMagicLink = async ({
@@ -122,15 +146,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     startTransition(() => {
+      setApiSessionToken(response.session.token);
       setApiUserId(response.user.id);
       setUser(response.user);
     });
-    await persistUser(response.user);
+    await persistAuth(response);
   };
 
   const logout = () => {
-    void persistUser(null);
+    void forumApi.logout().catch(() => undefined);
+    void persistAuth(null);
     startTransition(() => {
+      setApiSessionToken('');
       setApiUserId(GUEST_USER_ID);
       setUser(null);
     });
@@ -141,19 +168,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const bootstrap = async () => {
       try {
-        const storedUserJson = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+        const storedAuthJson = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
 
-        if (!storedUserJson) {
+        if (!storedAuthJson) {
+          setApiSessionToken('');
           setApiUserId(GUEST_USER_ID);
           return;
         }
 
-        const storedUser = JSON.parse(storedUserJson) as AuthUser;
-        setApiUserId(storedUser.id);
+        const storedAuth = JSON.parse(storedAuthJson) as StoredAuthSession;
+        setApiSessionToken(storedAuth.session.token);
+        setApiUserId(storedAuth.user.id);
 
         if (active) {
           startTransition(() => {
-            setUser(storedUser);
+            setUser(storedAuth.user);
           });
         }
 
@@ -166,9 +195,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           }
 
-          await persistUser(profile);
+          await persistAuth({
+            ...storedAuth,
+            user: profile,
+          });
         } catch {
-          await persistUser(null);
+          await persistAuth(null);
+          setApiSessionToken('');
           setApiUserId(GUEST_USER_ID);
 
           if (active) {

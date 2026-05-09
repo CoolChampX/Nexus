@@ -3,7 +3,7 @@ import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -22,7 +22,7 @@ import { NexusLogo } from '@/components/nexus-logo';
 import { ThemedText } from '@/components/themed-text';
 import { useAuth } from '@/lib/auth';
 import { useAppearance } from '@/lib/appearance';
-import { forumApi, type SocialProvider } from '@/lib/forum-api';
+import { forumApi, SOCIAL_PROVIDERS, type SocialProvider } from '@/lib/forum-api';
 import { animateLayoutTransition, enableLayoutTransitions } from '@/lib/ui-transitions';
 
 type AuthMode = 'login' | 'register';
@@ -42,6 +42,22 @@ const REGISTER_LOADING_MESSAGES = [
   'Configuring your future visuals...',
   'Opening your first launch sequence...',
 ];
+const SOCIAL_PROVIDER_META: Record<
+  SocialProvider,
+  {
+    icon: 'github' | 'google';
+    label: string;
+  }
+> = {
+  github: {
+    icon: 'github',
+    label: 'GitHub',
+  },
+  google: {
+    icon: 'google',
+    label: 'Google',
+  },
+};
 
 const buildCallbackUrl = (flow: 'magic' | 'oauth', provider?: SocialProvider) => {
   const queryParams = {
@@ -273,7 +289,7 @@ export default function AuthScreen() {
     });
   };
 
-  const completeAuthFromUrl = async (url: string | null) => {
+  const completeAuthFromUrl = useEffectEvent(async (url: string | null) => {
     if (!url) {
       return;
     }
@@ -281,7 +297,10 @@ export default function AuthScreen() {
     const { queryParams } = Linking.parse(url);
     const flow = typeof queryParams?.flow === 'string' ? queryParams.flow : null;
     const provider =
-      queryParams?.provider === 'github' ? queryParams.provider : pendingOAuthProviderRef.current;
+      typeof queryParams?.provider === 'string' &&
+      SOCIAL_PROVIDERS.includes(queryParams.provider as SocialProvider)
+        ? (queryParams.provider as SocialProvider)
+        : pendingOAuthProviderRef.current;
     const isOAuthCallback = flow === 'oauth' || pendingOAuthProviderRef.current !== null;
 
     if (!queryParams?.userId || !queryParams?.secret) {
@@ -324,7 +343,7 @@ export default function AuthScreen() {
     } finally {
       setSocialLoading(null);
     }
-  };
+  });
 
   useEffect(() => {
     void Linking.getInitialURL().then((url) => {
@@ -338,7 +357,7 @@ export default function AuthScreen() {
     return () => {
       subscription.remove();
     };
-  }, [loginWithMagicLink, loginWithOAuth]);
+  }, [completeAuthFromUrl]);
 
   const submit = async () => {
     try {
@@ -596,15 +615,28 @@ export default function AuthScreen() {
             </View>
 
             <View style={styles.utilityRow}>
-              <Pressable
-                disabled={isBusy}
-                onPress={() => void continueWithOAuth('github')}
-                style={[styles.socialPill, { backgroundColor: socialPillBackground, borderColor: faintAccent }]}>
-                <FontAwesome name="github" size={14} color={palette.text} />
-                <ThemedText style={[styles.socialPillText, { color: palette.text }]}>
-                  {socialLoading === 'github' ? 'Connecting...' : 'GitHub'}
-                </ThemedText>
-              </Pressable>
+              {SOCIAL_PROVIDERS.map((provider) => {
+                const meta = SOCIAL_PROVIDER_META[provider];
+
+                return (
+                  <Pressable
+                    key={provider}
+                    disabled={isBusy}
+                    onPress={() => void continueWithOAuth(provider)}
+                    style={[
+                      styles.socialPill,
+                      {
+                        backgroundColor: socialPillBackground,
+                        borderColor: faintAccent,
+                      },
+                    ]}>
+                    <FontAwesome name={meta.icon} size={14} color={palette.text} />
+                    <ThemedText style={[styles.socialPillText, { color: palette.text }]}>
+                      {socialLoading === provider ? 'Connecting...' : meta.label}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
             </View>
 
             {mode === 'register' ? (
@@ -1015,9 +1047,7 @@ const styles = StyleSheet.create({
     minWidth: 94,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    position: 'absolute',
-    right: 0,
-    top: 0,
+    position: 'relative',
   },
   socialPillText: {
     fontSize: 11,
@@ -1037,8 +1067,10 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   utilityRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'flex-end',
     minHeight: 40,
-    paddingRight: 104,
-    position: 'relative',
   },
 });

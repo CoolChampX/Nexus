@@ -9,6 +9,7 @@ import { User } from "../models/User.js";
 import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
+import { createUserSession, revokeSessionToken, revokeUserSessions } from "../utils/session.js";
 
 const createUserId = (name, email) => {
   const base = (name || email.split("@")[0] || "developer")
@@ -24,7 +25,8 @@ const createRandomPassword = () =>
   `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}A1!`;
 
 const SOCIAL_PROVIDERS = {
-  github: OAuthProvider.Github
+  github: OAuthProvider.Github,
+  google: OAuthProvider.Google
 };
 
 const buildAuthPayload = (user) => ({
@@ -40,6 +42,11 @@ const buildAuthPayload = (user) => ({
   avatarColor: resolveAvatarColor(user.avatarColor),
   preferredTags: user.preferredTags,
   joinedAt: user.createdAt
+});
+
+const buildAuthResponse = async (user) => ({
+  user: buildAuthPayload(user),
+  session: await createUserSession(user.userId)
 });
 
 const buildProfilePayload = async (user) => {
@@ -214,9 +221,7 @@ export const registerUser = async (req, res) => {
     passwordHash
   });
 
-  res.status(201).json({
-    user: buildAuthPayload(user)
-  });
+  res.status(201).json(await buildAuthResponse(user));
 };
 
 export const loginUser = async (req, res) => {
@@ -239,9 +244,7 @@ export const loginUser = async (req, res) => {
     throw new ApiError(401, "Invalid email or password.");
   }
 
-  res.json({
-    user: buildAuthPayload(user)
-  });
+  res.json(await buildAuthResponse(user));
 };
 
 export const getOAuthUrl = async (req, res) => {
@@ -382,7 +385,7 @@ export const completePasswordReset = async (req, res) => {
     }
 
     user.passwordHash = await hashPassword(password);
-    await user.save();
+    await Promise.all([user.save(), revokeUserSessions(user.userId)]);
 
     res.json({
       message: "Password reset successful."
@@ -500,9 +503,7 @@ export const completeOAuthLogin = async (req, res) => {
   try {
     const user = await finalizeAppwriteTokenLogin(userId, secret);
 
-    res.json({
-      user: buildAuthPayload(user)
-    });
+    res.json(await buildAuthResponse(user));
   } catch (error) {
     if (error instanceof AppwriteException) {
       throw new ApiError(502, error.message);
@@ -522,9 +523,7 @@ export const completeMagicLinkLogin = async (req, res) => {
   try {
     const user = await finalizeAppwriteTokenLogin(userId, secret);
 
-    res.json({
-      user: buildAuthPayload(user)
-    });
+    res.json(await buildAuthResponse(user));
   } catch (error) {
     if (error instanceof AppwriteException) {
       throw new ApiError(502, error.message);
@@ -538,6 +537,22 @@ export const getCurrentUser = async (req, res) => {
   const profile = await buildProfilePayload(req.userDocument);
 
   res.json(profile);
+};
+
+export const logoutCurrentUser = async (req, res) => {
+  const authorizationHeader = req.header("authorization");
+  const token =
+    typeof authorizationHeader === "string" && authorizationHeader.startsWith("Bearer ")
+      ? authorizationHeader.slice("Bearer ".length).trim()
+      : "";
+
+  if (token) {
+    await revokeSessionToken(token);
+  }
+
+  res.json({
+    message: "Logged out successfully."
+  });
 };
 
 export const updateCurrentUser = async (req, res) => {
@@ -659,7 +674,7 @@ export const changeCurrentUserPassword = async (req, res) => {
   try {
     await appwriteUsers.updatePassword(user.appwriteUserId, password.trim());
     user.passwordHash = await hashPassword(password.trim());
-    await user.save();
+    await Promise.all([user.save(), revokeUserSessions(user.userId)]);
 
     res.json({
       message: "Password updated successfully."
