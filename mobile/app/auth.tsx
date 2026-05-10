@@ -80,16 +80,16 @@ const buildCallbackUrl = (flow: 'magic' | 'oauth', provider?: SocialProvider) =>
     query.set('provider', provider);
   }
 
-  // Use a path-only custom-scheme URL so Expo Router resolves the `auth` route
-  // instead of treating `localhost/auth` as an unmatched nested path.
-  return `${appwriteCallbackScheme}:///auth?${query.toString()}`;
+  // Appwrite validates OAuth redirect hostnames against the project's platform
+  // list, so native deep links need a hostname such as `localhost`.
+  return `${appwriteCallbackScheme}://localhost/auth?${query.toString()}`;
 };
 
 const buildPasswordResetUrl = () => {
   const configuredResetBaseUrl = process.env.EXPO_PUBLIC_RESET_BASE_URL?.trim();
   const appRedirectUrl = isExpoGo
     ? Linking.createURL('reset-password')
-    : `${appwriteCallbackScheme}:///reset-password`;
+    : `${appwriteCallbackScheme}://localhost/reset-password`;
 
   const resetBaseUrl = configuredResetBaseUrl || forumApi.apiBaseUrl;
 
