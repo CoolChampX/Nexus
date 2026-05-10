@@ -11,6 +11,12 @@ export const env = {
   appwriteEndpoint: process.env.APPWRITE_ENDPOINT || "",
   appwriteProjectId: process.env.APPWRITE_PROJECT_ID || "",
   appwriteApiKey: process.env.APPWRITE_API_KEY || "",
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
+  cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID || "",
+  cloudflareImagesApiToken: process.env.CLOUDFLARE_IMAGES_API_TOKEN || "",
+  cloudflareImagesDeliveryBaseUrl: process.env.CLOUDFLARE_IMAGES_DELIVERY_BASE_URL || "",
   openAiApiKey:
     process.env.OPENAI_API_KEY || process.env.OPEN_AI_KEY || process.env.OPEN_API_KEY || "",
   openAiModel: process.env.OPENAI_MODEL || "gpt-4.1-mini",

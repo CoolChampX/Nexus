@@ -31,6 +31,8 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    EXPO_PUBLIC_APPWRITE_PUBLIC_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
    ```
 
+Profile avatars and banners now upload directly to Cloudinary from the app and store only the final Cloudinary delivery URL in MongoDB. Configure Cloudinary on both mobile and backend before testing profile image changes.
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)

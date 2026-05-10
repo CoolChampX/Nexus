@@ -10,6 +10,16 @@ import { useAuth } from '@/lib/auth';
 import { useAppearance } from '@/lib/appearance';
 import { forumApi, type ProfileResponse } from '@/lib/forum-api';
 
+type PendingImageAsset = ImagePicker.ImagePickerAsset | null;
+
+type UploadedCloudinaryImage = {
+  publicId: string;
+  secureUrl: string;
+};
+
+const cloudinaryCloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim() || '';
+const cloudinaryUploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET?.trim() || '';
+
 const formatJoinedDate = (value: string) =>
   new Intl.DateTimeFormat('en', {
     month: 'long',
@@ -27,7 +37,11 @@ export default function EditProfileScreen() {
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
   const [avatarImageUrl, setAvatarImageUrl] = useState('');
+  const [avatarImagePublicId, setAvatarImagePublicId] = useState('');
   const [bannerImageUrl, setBannerImageUrl] = useState('');
+  const [bannerImagePublicId, setBannerImagePublicId] = useState('');
+  const [pendingAvatarAsset, setPendingAvatarAsset] = useState<PendingImageAsset>(null);
+  const [pendingBannerAsset, setPendingBannerAsset] = useState<PendingImageAsset>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const entrance = useRef(new Animated.Value(0)).current;
@@ -51,7 +65,9 @@ export default function EditProfileScreen() {
       setBio(response.bio);
       setLocation(response.location);
       setAvatarImageUrl(response.avatarImageUrl);
+      setAvatarImagePublicId('');
       setBannerImageUrl(response.bannerImageUrl);
+      setBannerImagePublicId('');
     };
 
     void loadProfile();
@@ -97,7 +113,6 @@ export default function EditProfileScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: target === 'banner' ? [16, 7] : [1, 1],
-      base64: true,
       quality: 0.9,
     });
 
@@ -111,19 +126,73 @@ export default function EditProfileScreen() {
       return;
     }
 
-    const nextUri =
-      nextAsset.base64 && nextAsset.mimeType
-        ? `data:${nextAsset.mimeType};base64,${nextAsset.base64}`
-        : nextAsset.base64
-          ? `data:image/jpeg;base64,${nextAsset.base64}`
-          : nextAsset.uri ?? '';
+    const nextUri = nextAsset.uri ?? '';
 
     if (target === 'banner') {
+      setPendingBannerAsset(nextAsset);
       setBannerImageUrl(nextUri);
       return;
     }
 
+    setPendingAvatarAsset(nextAsset);
     setAvatarImageUrl(nextUri);
+  };
+
+  const clearImage = (target: 'avatar' | 'banner') => {
+    if (target === 'banner') {
+      setPendingBannerAsset(null);
+      setBannerImageUrl('');
+      setBannerImagePublicId('');
+      return;
+    }
+
+    setPendingAvatarAsset(null);
+    setAvatarImageUrl('');
+    setAvatarImagePublicId('');
+  };
+
+  const uploadImageToCloudinary = async (
+    asset: ImagePicker.ImagePickerAsset,
+    kind: 'avatar' | 'banner'
+  ): Promise<UploadedCloudinaryImage> => {
+    if (!cloudinaryCloudName || !cloudinaryUploadPreset) {
+      throw new Error('Cloudinary upload is not configured in the mobile environment.');
+    }
+
+    const formData = new FormData();
+    formData.append('file', {
+      uri: asset.uri,
+      name: asset.fileName?.trim() || `${kind}.${asset.mimeType?.split('/')[1] || 'jpg'}`,
+      type: asset.mimeType?.trim() || 'image/jpeg',
+    } as any);
+    formData.append('upload_preset', cloudinaryUploadPreset);
+    formData.append('folder', `nexus/${kind}s`);
+
+    const uploadResponse = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
+      {
+      method: 'POST',
+      body: formData,
+      }
+    );
+
+    if (!uploadResponse.ok) {
+      const responseText = await uploadResponse.text().catch(() => '');
+      throw new Error(responseText.trim() || `Could not upload the ${kind} image to Cloudinary.`);
+    }
+
+    const payload = (await uploadResponse.json().catch(() => null)) as
+      | { public_id?: string; secure_url?: string; error?: { message?: string } }
+      | null;
+
+    if (!payload?.public_id || !payload.secure_url) {
+      throw new Error(payload?.error?.message || `Cloudinary did not return a valid ${kind} image.`);
+    }
+
+    return {
+      publicId: payload.public_id,
+      secureUrl: payload.secure_url,
+    };
   };
 
   const saveProfile = async () => {
@@ -139,14 +208,37 @@ export default function EditProfileScreen() {
         }
       }
 
+      const [nextAvatarUpload, nextBannerUpload] = await Promise.all([
+        pendingAvatarAsset
+          ? uploadImageToCloudinary(pendingAvatarAsset, 'avatar')
+          : Promise.resolve<UploadedCloudinaryImage | null>(null),
+        pendingBannerAsset
+          ? uploadImageToCloudinary(pendingBannerAsset, 'banner')
+          : Promise.resolve<UploadedCloudinaryImage | null>(null),
+      ]);
+
+      const nextAvatarImageUrl = nextAvatarUpload?.secureUrl ?? avatarImageUrl;
+      const nextAvatarPublicId = nextAvatarUpload?.publicId ?? avatarImagePublicId;
+      const nextBannerImageUrl = nextBannerUpload?.secureUrl ?? bannerImageUrl;
+      const nextBannerPublicId = nextBannerUpload?.publicId ?? bannerImagePublicId;
+
       await forumApi.updateCurrentUser({
         name,
         headline,
         bio,
         location,
-        avatarImageUrl,
-        bannerImageUrl,
+        avatarImageUrl: nextAvatarImageUrl,
+        avatarImagePublicId: nextAvatarPublicId,
+        bannerImageUrl: nextBannerImageUrl,
+        bannerImagePublicId: nextBannerPublicId,
       });
+
+      setAvatarImageUrl(nextAvatarImageUrl);
+      setAvatarImagePublicId(nextAvatarPublicId);
+      setBannerImageUrl(nextBannerImageUrl);
+      setBannerImagePublicId(nextBannerPublicId);
+      setPendingAvatarAsset(null);
+      setPendingBannerAsset(null);
 
       if (newPassword.trim()) {
         await forumApi.changeCurrentUserPassword({
@@ -239,9 +331,20 @@ export default function EditProfileScreen() {
               </View>
             )}
           </View>
-          <Pressable onPress={() => void pickImage('banner')} style={[styles.changeButton, { borderColor: cardBorder }]}>
-            <ThemedText style={[styles.changeButtonText, { color: palette.text }]}>Change cover photo</ThemedText>
-          </Pressable>
+          <View style={styles.mediaActionRow}>
+            <Pressable
+              onPress={() => void pickImage('banner')}
+              style={[styles.changeButton, styles.mediaActionButton, { borderColor: cardBorder }]}>
+              <ThemedText style={[styles.changeButtonText, { color: palette.text }]}>Change cover photo</ThemedText>
+            </Pressable>
+            {(bannerSource || bannerImagePublicId) ? (
+              <Pressable
+                onPress={() => clearImage('banner')}
+                style={[styles.changeButton, styles.mediaActionButton, { borderColor: '#FCA5A5' }]}>
+                <ThemedText style={[styles.changeButtonText, { color: '#DC2626' }]}>Remove</ThemedText>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -257,9 +360,20 @@ export default function EditProfileScreen() {
               )}
             </View>
           </View>
-          <Pressable onPress={() => void pickImage('avatar')} style={[styles.changeButton, { borderColor: cardBorder }]}>
-            <ThemedText style={[styles.changeButtonText, { color: palette.text }]}>Change profile picture</ThemedText>
-          </Pressable>
+          <View style={styles.mediaActionRow}>
+            <Pressable
+              onPress={() => void pickImage('avatar')}
+              style={[styles.changeButton, styles.mediaActionButton, { borderColor: cardBorder }]}>
+              <ThemedText style={[styles.changeButtonText, { color: palette.text }]}>Change profile picture</ThemedText>
+            </Pressable>
+            {(avatarSource || avatarImagePublicId) ? (
+              <Pressable
+                onPress={() => clearImage('avatar')}
+                style={[styles.changeButton, styles.mediaActionButton, { borderColor: '#FCA5A5' }]}>
+                <ThemedText style={[styles.changeButtonText, { color: '#DC2626' }]}>Remove</ThemedText>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -440,6 +554,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 16,
+  },
+  mediaActionButton: {
+    flex: 1,
+    marginTop: 0,
+  },
+  mediaActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
   },
   loadingBanner: {
     borderRadius: 18,

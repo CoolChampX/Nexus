@@ -138,6 +138,12 @@ export type ProfileResponse = AuthUser & {
   recentAnswers: ProfileAnswer[];
 };
 
+export type DirectImageUploadResponse = {
+  imageId: string;
+  imageUrl: string;
+  uploadURL: string;
+};
+
 const DEMO_USER_ID = 'demo-mobile-user';
 
 const detectApiBaseUrl = () => {
@@ -297,7 +303,9 @@ export const forumApi = {
     location?: string;
     website?: string;
     avatarImageUrl?: string;
+    avatarImagePublicId?: string;
     bannerImageUrl?: string;
+    bannerImagePublicId?: string;
     avatarColor?: string;
     preferredTags?: string[];
   }) =>

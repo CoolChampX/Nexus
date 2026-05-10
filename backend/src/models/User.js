@@ -50,7 +50,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: ""
     },
+    avatarImagePublicId: {
+      type: String,
+      default: ""
+    },
     bannerImageUrl: {
+      type: String,
+      default: ""
+    },
+    bannerImagePublicId: {
       type: String,
       default: ""
     },

@@ -1,4 +1,5 @@
 import { Account, AppwriteException, Client, OAuthProvider } from "node-appwrite";
+import crypto from "crypto";
 
 import { appwriteClient, appwriteUsers } from "../config/appwrite.js";
 import { env } from "../config/env.js";
@@ -48,6 +49,45 @@ const buildAuthResponse = async (user) => ({
   user: buildAuthPayload(user),
   session: await createUserSession(user.userId)
 });
+
+const destroyCloudinaryImage = async (publicId) => {
+  if (!publicId?.trim()) {
+    return;
+  }
+
+  if (!env.cloudinaryCloudName || !env.cloudinaryApiKey || !env.cloudinaryApiSecret) {
+    return;
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = crypto
+    .createHash("sha1")
+    .update(`invalidate=true&public_id=${publicId.trim()}&timestamp=${timestamp}${env.cloudinaryApiSecret}`)
+    .digest("hex");
+
+  const body = new URLSearchParams();
+  body.set("public_id", publicId.trim());
+  body.set("invalidate", "true");
+  body.set("timestamp", String(timestamp));
+  body.set("api_key", env.cloudinaryApiKey);
+  body.set("signature", signature);
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${env.cloudinaryCloudName}/image/destroy`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: body.toString()
+    }
+  );
+
+  if (!response.ok) {
+    const payload = await response.text().catch(() => "");
+    throw new ApiError(502, payload.trim() || "Could not delete the previous Cloudinary image.");
+  }
+};
 
 const getPublicRequestBaseUrl = (req) => {
   if (env.publicBackendUrl?.trim()) {
@@ -572,7 +612,9 @@ export const updateCurrentUser = async (req, res) => {
     website,
     avatarColor,
     avatarImageUrl,
+    avatarImagePublicId,
     bannerImageUrl,
+    bannerImagePublicId,
     preferredTags
   } = req.body;
   const user = req.userDocument;
@@ -604,6 +646,17 @@ export const updateCurrentUser = async (req, res) => {
       throw new ApiError(400, "Banner image must be a valid URL.");
     }
   }
+
+  if (typeof avatarImagePublicId !== "undefined" && typeof avatarImagePublicId !== "string") {
+    throw new ApiError(400, "Profile image public id must be a string.");
+  }
+
+  if (typeof bannerImagePublicId !== "undefined" && typeof bannerImagePublicId !== "string") {
+    throw new ApiError(400, "Banner image public id must be a string.");
+  }
+
+  const previousAvatarImagePublicId = user.avatarImagePublicId;
+  const previousBannerImagePublicId = user.bannerImagePublicId;
 
   if (
     typeof avatarColor === "string" &&
@@ -645,8 +698,16 @@ export const updateCurrentUser = async (req, res) => {
     user.avatarImageUrl = avatarImageUrl.trim();
   }
 
+  if (typeof avatarImagePublicId === "string") {
+    user.avatarImagePublicId = avatarImagePublicId.trim();
+  }
+
   if (typeof bannerImageUrl === "string") {
     user.bannerImageUrl = bannerImageUrl.trim();
+  }
+
+  if (typeof bannerImagePublicId === "string") {
+    user.bannerImagePublicId = bannerImagePublicId.trim();
   }
 
   if (typeof avatarColor === "string") {
@@ -658,6 +719,28 @@ export const updateCurrentUser = async (req, res) => {
   }
 
   await user.save();
+
+  const cleanupTasks = [];
+
+  if (
+    typeof avatarImagePublicId === "string" &&
+    previousAvatarImagePublicId &&
+    previousAvatarImagePublicId !== user.avatarImagePublicId
+  ) {
+    cleanupTasks.push(destroyCloudinaryImage(previousAvatarImagePublicId));
+  }
+
+  if (
+    typeof bannerImagePublicId === "string" &&
+    previousBannerImagePublicId &&
+    previousBannerImagePublicId !== user.bannerImagePublicId
+  ) {
+    cleanupTasks.push(destroyCloudinaryImage(previousBannerImagePublicId));
+  }
+
+  if (cleanupTasks.length) {
+    await Promise.all(cleanupTasks);
+  }
 
   const profile = await buildProfilePayload(user);
   res.json(profile);
