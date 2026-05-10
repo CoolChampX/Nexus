@@ -32,6 +32,9 @@ WebBrowser.maybeCompleteAuthSession();
 const appwriteCallbackScheme =
   (Constants.expoConfig?.scheme as string | undefined) || 'appwrite-callback-69e5cba40023fbdf246f';
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
+const appwriteProjectId = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID?.trim() || '';
+const appwritePublicEndpoint =
+  process.env.EXPO_PUBLIC_APPWRITE_PUBLIC_ENDPOINT?.trim() || process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT?.trim() || '';
 const socialAuthRequiresDevBuildMessage =
   'GitHub and Google sign-in need a development build or standalone app. Expo Go cannot reliably return OAuth redirects back into this project.';
 const LOGIN_LOADING_MESSAGES = [
@@ -103,6 +106,21 @@ const buildMagicLinkUrl = () => {
   const apiBaseUrl = forumApi.apiBaseUrl.replace(/\/$/, '');
 
   return `${apiBaseUrl}/api/auth/magic-link/redirect?redirect=${encodeURIComponent(appRedirectUrl)}`;
+};
+
+const buildAppwriteOAuthUrl = (provider: SocialProvider, redirectUrl: string) => {
+  if (!appwriteProjectId || !appwritePublicEndpoint) {
+    throw new Error('Missing Appwrite public endpoint or project id in the mobile environment.');
+  }
+
+  const baseUrl = appwritePublicEndpoint.replace(/\/$/, '');
+  const search = new URLSearchParams({
+    project: appwriteProjectId,
+    success: redirectUrl,
+    failure: redirectUrl,
+  });
+
+  return `${baseUrl}/account/tokens/oauth2/${provider}?${search.toString()}`;
 };
 
 export default function AuthScreen() {
@@ -390,12 +408,7 @@ export default function AuthScreen() {
       setSocialLoading(provider);
       pendingOAuthProviderRef.current = provider;
       const redirectUrl = buildCallbackUrl('oauth', provider);
-
-      const { url } = await forumApi.getOAuthUrl(
-        provider,
-        redirectUrl,
-        redirectUrl
-      );
+      const url = buildAppwriteOAuthUrl(provider, redirectUrl);
       const result = await WebBrowser.openAuthSessionAsync(url, redirectUrl);
 
       if (result.type !== 'success' || !result.url) {

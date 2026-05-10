@@ -24,6 +24,13 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    EXPO_PUBLIC_RESET_BASE_URL=https://your-public-backend-url.ngrok-free.app
    ```
 
+4. For GitHub and Google login, expose your Appwrite project ID and endpoint to the app:
+
+   ```bash
+   EXPO_PUBLIC_APPWRITE_PROJECT_ID=your-project-id
+   EXPO_PUBLIC_APPWRITE_PUBLIC_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+   ```
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
