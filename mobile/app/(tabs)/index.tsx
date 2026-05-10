@@ -36,6 +36,20 @@ const ASK_BUTTON_GAP = 12;
 
 type FeedTab = (typeof FEED_TABS)[number];
 
+const getOptimisticVoteState = (
+  currentVote: -1 | 0 | 1 | undefined,
+  currentScore: number,
+  pressedValue: -1 | 1
+) => {
+  const normalizedCurrentVote = currentVote ?? 0;
+  const nextVote = normalizedCurrentVote === pressedValue ? 0 : pressedValue;
+
+  return {
+    currentUserVote: nextVote as -1 | 0 | 1,
+    voteScore: Math.max(0, currentScore - normalizedCurrentVote + nextVote),
+  };
+};
+
 export default function HomeScreen() {
   const isFocused = useIsFocused();
   const { ready, user } = useAuth();
@@ -53,6 +67,8 @@ export default function HomeScreen() {
   const [feedTabsWidth, setFeedTabsWidth] = useState(0);
   const [pullDistance, setPullDistance] = useState(0);
   const feedTabAnimation = useRef(new Animated.Value(0)).current;
+  const filterPanelAnimation = useRef(new Animated.Value(0)).current;
+  const filterIconAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     enableLayoutTransitions();
@@ -92,6 +108,23 @@ export default function HomeScreen() {
   };
 
   const handleVote = async (questionId: string, value: -1 | 1) => {
+    const previousQuestion = questions.find((question) => question._id === questionId);
+
+    if (!previousQuestion) {
+      return;
+    }
+
+    setQuestions((current) =>
+      current.map((question) =>
+        question._id === questionId
+          ? {
+              ...question,
+              ...getOptimisticVoteState(question.currentUserVote, question.voteScore, value),
+            }
+          : question
+      )
+    );
+
     try {
       const result = await forumApi.castVote('question', questionId, value);
       setQuestions((current) =>
@@ -106,6 +139,9 @@ export default function HomeScreen() {
         )
       );
     } catch (nextError) {
+      setQuestions((current) =>
+        current.map((question) => (question._id === questionId ? previousQuestion : question))
+      );
       setError(nextError instanceof Error ? nextError.message : 'Could not update vote');
     }
   };
@@ -194,6 +230,18 @@ export default function HomeScreen() {
       : utilityBorder;
   const filterButtonIcon = filterButtonActive ? '#F59E0B' : utilityText;
   const feedTabSlotWidth = feedTabsWidth > 0 ? (feedTabsWidth - 12) / FEED_TABS.length : 0;
+  const filterPanelTranslateY = filterPanelAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-12, 0],
+  });
+  const filterPanelScale = filterPanelAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.96, 1],
+  });
+  const filterIconRotate = filterIconAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '90deg'],
+  });
 
   useEffect(() => {
     const nextIndex = FEED_TABS.indexOf(activeFeedTab);
@@ -211,6 +259,24 @@ export default function HomeScreen() {
       setPullDistance(0);
     }
   }, [refreshing]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(filterPanelAnimation, {
+        toValue: filterMenuOpen ? 1 : 0,
+        damping: 18,
+        mass: 0.9,
+        stiffness: 170,
+        useNativeDriver: true,
+      }),
+      Animated.timing(filterIconAnimation, {
+        toValue: filterMenuOpen ? 1 : 0,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [filterIconAnimation, filterMenuOpen, filterPanelAnimation]);
 
   const toggleSavedFilter = async (filter: string) => {
     const nextFilters = savedFilters.includes(filter)
@@ -289,7 +355,9 @@ export default function HomeScreen() {
                           borderColor: filterButtonBorder,
                         },
                       ]}>
-                      <IconSymbol name="slider.horizontal.3" size={18} color={filterButtonIcon} />
+                      <Animated.View style={{ transform: [{ rotate: filterIconRotate }] }}>
+                        <IconSymbol name="slider.horizontal.3" size={18} color={filterButtonIcon} />
+                      </Animated.View>
                       {appliedFilterCount > 0 ? (
                         <View
                           style={[
@@ -346,12 +414,14 @@ export default function HomeScreen() {
                   />
                 </View>
                 {filterMenuOpen ? (
-                  <View
+                  <Animated.View
                     style={[
                       styles.filterDrawer,
                       {
                         backgroundColor: filterDrawerSurface,
                         borderColor: utilityBorder,
+                        opacity: filterPanelAnimation,
+                        transform: [{ translateY: filterPanelTranslateY }, { scale: filterPanelScale }],
                       },
                     ]}>
                     <ThemedText style={[styles.filterDrawerTitle, { color: filterDrawerTitleColor }]}>
@@ -388,7 +458,7 @@ export default function HomeScreen() {
                         );
                       })}
                     </ScrollView>
-                  </View>
+                  </Animated.View>
                 ) : null}
               </View>
             </View>

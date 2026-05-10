@@ -458,8 +458,10 @@ export default function AuthScreen() {
             : null;
         throw new Error(errorDescription || String(queryParams.error));
       }
-
-      throw new Error('Could not verify the social login response.');
+      // Some devices hand control back through the routed callback screen rather
+      // than exposing the final query params on `result.url`. In that case the
+      // auth screen effect will complete the sign-in from the route params.
+      return;
     } catch (error) {
       pendingOAuthProviderRef.current = null;
       setAuthSubmitting(false);

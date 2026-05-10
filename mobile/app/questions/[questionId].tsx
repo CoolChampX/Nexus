@@ -55,6 +55,20 @@ const insertIntoSelection = (currentValue: string, selection: SelectionRange, to
   };
 };
 
+const getOptimisticVoteState = (
+  currentVote: -1 | 0 | 1 | undefined,
+  currentScore: number,
+  pressedValue: -1 | 1
+) => {
+  const normalizedCurrentVote = currentVote ?? 0;
+  const nextVote = normalizedCurrentVote === pressedValue ? 0 : pressedValue;
+
+  return {
+    currentUserVote: nextVote as -1 | 0 | 1,
+    voteScore: Math.max(0, currentScore - normalizedCurrentVote + nextVote),
+  };
+};
+
 function CodeBlock({ code }: { code: string }) {
   if (!code.trim()) {
     return null;
@@ -110,28 +124,50 @@ function AuthorIdentity({
 
 function VoteControls({
   score,
+  currentVote,
   onVote,
   accent,
   cardAlt,
   text,
+  muted,
+  danger,
+  dangerSoft,
 }: {
   score: number;
+  currentVote?: -1 | 0 | 1;
   onVote: (value: -1 | 1) => void;
   accent: string;
   cardAlt: string;
   text: string;
+  muted: string;
+  danger: string;
+  dangerSoft: string;
 }) {
+  const activeUpvote = currentVote === 1;
+  const activeDownvote = currentVote === -1;
+
   return (
     <View style={styles.voteColumn}>
       <BouncyPressable onPress={() => onVote(1)} scaleTo={0.9}>
-        <View style={[styles.voteButton, { backgroundColor: cardAlt }]}>
-          <MaterialIcons name="keyboard-arrow-up" size={24} color={accent} />
+        <View
+          style={[
+            styles.voteButton,
+            { backgroundColor: activeUpvote ? `${accent}22` : cardAlt, borderColor: activeUpvote ? accent : cardAlt },
+          ]}>
+          <MaterialIcons name="keyboard-arrow-up" size={24} color={activeUpvote ? accent : muted} />
         </View>
       </BouncyPressable>
       <ThemedText style={[styles.voteScore, { color: text }]}>{Math.max(score, 0)}</ThemedText>
       <BouncyPressable onPress={() => onVote(-1)} scaleTo={0.9}>
-        <View style={[styles.voteButton, { backgroundColor: cardAlt }]}>
-          <MaterialIcons name="keyboard-arrow-down" size={24} color={accent} />
+        <View
+          style={[
+            styles.voteButton,
+            {
+              backgroundColor: activeDownvote ? dangerSoft : cardAlt,
+              borderColor: activeDownvote ? danger : cardAlt,
+            },
+          ]}>
+          <MaterialIcons name="keyboard-arrow-down" size={24} color={activeDownvote ? danger : muted} />
         </View>
       </BouncyPressable>
     </View>
@@ -530,19 +566,70 @@ export default function QuestionDetailScreen() {
   };
 
   const handleVote = async (targetType: 'question' | 'answer', targetId: string, value: -1 | 1) => {
+    const previousQuestion = targetType === 'question' ? question : null;
+    const previousAnswer = targetType === 'answer' ? answers.find((answer) => answer._id === targetId) ?? null : null;
+
+    if (targetType === 'question' && previousQuestion) {
+      setQuestion((current) =>
+        current
+          ? {
+              ...current,
+              ...getOptimisticVoteState(current.currentUserVote, current.voteScore, value),
+            }
+          : current
+      );
+    }
+
+    if (targetType === 'answer' && previousAnswer) {
+      setAnswers((current) =>
+        current.map((answer) =>
+          answer._id === targetId
+            ? {
+                ...answer,
+                ...getOptimisticVoteState(answer.currentUserVote, answer.voteScore, value),
+              }
+            : answer
+        )
+      );
+    }
+
     try {
       const result = await forumApi.castVote(targetType, targetId, value);
 
       if (targetType === 'question') {
-        setQuestion((current) => (current ? { ...current, voteScore: result.voteScore } : current));
+        setQuestion((current) =>
+          current
+            ? {
+                ...current,
+                voteScore: result.voteScore,
+                currentUserVote: result.currentUserVote,
+              }
+            : current
+        );
       } else {
         setAnswers((current) =>
           current.map((answer) =>
-            answer._id === targetId ? { ...answer, voteScore: result.voteScore } : answer
+            answer._id === targetId
+              ? {
+                  ...answer,
+                  voteScore: result.voteScore,
+                  currentUserVote: result.currentUserVote,
+                }
+              : answer
           )
         );
       }
     } catch (error) {
+      if (targetType === 'question' && previousQuestion) {
+        setQuestion(previousQuestion);
+      }
+
+      if (targetType === 'answer' && previousAnswer) {
+        setAnswers((current) =>
+          current.map((answer) => (answer._id === targetId ? previousAnswer : answer))
+        );
+      }
+
       Alert.alert('Vote failed', error instanceof Error ? error.message : 'Unknown error');
     }
   };
@@ -701,10 +788,14 @@ export default function QuestionDetailScreen() {
             <View style={styles.questionHeader}>
               <VoteControls
                 score={question.voteScore}
+                currentVote={question.currentUserVote}
                 onVote={(value) => void handleVote('question', question._id, value)}
                 accent={palette.accent}
                 cardAlt={palette.cardAlt}
                 text={palette.text}
+                muted={palette.muted}
+                danger={palette.danger}
+                dangerSoft={palette.dangerSoft}
               />
               <View style={styles.questionCopy}>
                 <AuthorIdentity
@@ -796,10 +887,14 @@ export default function QuestionDetailScreen() {
                 <View style={styles.answerHeader}>
                   <VoteControls
                     score={answer.voteScore}
+                    currentVote={answer.currentUserVote}
                     onVote={(value) => void handleVote('answer', answer._id, value)}
                     accent={palette.accent}
                     cardAlt={palette.cardAlt}
                     text={palette.text}
+                    muted={palette.muted}
+                    danger={palette.danger}
+                    dangerSoft={palette.dangerSoft}
                   />
                   <View style={styles.answerContentColumn}>
                     <View style={styles.answerRail}>
@@ -1250,6 +1345,7 @@ const styles = StyleSheet.create({
   },
   voteButton: {
     alignItems: 'center',
+    borderWidth: 1,
     borderRadius: 18,
     height: 36,
     justifyContent: 'center',

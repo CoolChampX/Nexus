@@ -9,11 +9,12 @@ import {
   deleteNotificationsForAnswer
 } from "../services/notification.service.js";
 
-const buildAnswerPayload = (answer, author = null) => ({
+const buildAnswerPayload = (answer, { author = null, currentUserVote = 0 } = {}) => ({
   ...answer,
   answerId: String(answer._id),
   questionId: String(answer.questionId),
   authorId: author?.email || answer.authorId,
+  currentUserVote,
   author: author
     ? {
         id: author.userId,
@@ -31,14 +32,34 @@ const buildAnswerPayload = (answer, author = null) => ({
       }
 });
 
-const hydrateAnswers = async (answers) => {
+const hydrateAnswers = async (answers, currentUserId = null) => {
   const authorIds = [...new Set(answers.map((answer) => answer.authorId))];
-  const authors = await User.find({ userId: { $in: authorIds } })
-    .select("userId name email avatarImageUrl avatarColor")
-    .lean();
+  const answerIds = answers.map((answer) => answer._id);
+  const [authors, currentUserVotes] = await Promise.all([
+    User.find({ userId: { $in: authorIds } })
+      .select("userId name email avatarImageUrl avatarColor")
+      .lean(),
+    currentUserId
+      ? Vote.find({
+          targetType: "answer",
+          targetId: { $in: answerIds },
+          userId: currentUserId
+        })
+          .select("targetId value")
+          .lean()
+      : []
+  ]);
   const authorsById = Object.fromEntries(authors.map((author) => [author.userId, author]));
+  const currentUserVoteByAnswerId = Object.fromEntries(
+    currentUserVotes.map((vote) => [String(vote.targetId), vote.value])
+  );
 
-  return answers.map((answer) => buildAnswerPayload(answer, authorsById[answer.authorId] || null));
+  return answers.map((answer) =>
+    buildAnswerPayload(answer, {
+      author: authorsById[answer.authorId] || null,
+      currentUserVote: currentUserVoteByAnswerId[String(answer._id)] || 0
+    })
+  );
 };
 
 export const listAnswers = async (req, res) => {
@@ -47,7 +68,7 @@ export const listAnswers = async (req, res) => {
     createdAt: 1
   }).lean();
 
-  res.json(await hydrateAnswers(answers));
+  res.json(await hydrateAnswers(answers, req.user?.id || null));
 };
 
 export const createAnswer = async (req, res) => {
@@ -65,7 +86,7 @@ export const createAnswer = async (req, res) => {
     body: answer.body
   });
 
-  const [payload] = await hydrateAnswers([answer.toObject()]);
+  const [payload] = await hydrateAnswers([answer.toObject()], req.user.id);
 
   res.status(201).json(payload);
 };

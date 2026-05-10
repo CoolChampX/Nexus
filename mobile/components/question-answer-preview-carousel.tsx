@@ -510,8 +510,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   viewAllButton: {
-    marginTop: 2,
-    minWidth: 112,
+    alignItems: 'flex-end',
+    minWidth: 118,
+    paddingLeft: 10,
+    paddingTop: 2,
   },
   viewport: {
     marginTop: 12,

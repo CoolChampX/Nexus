@@ -10,6 +10,6 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const answerRouter = Router();
 
-answerRouter.get("/:questionId/answers", asyncHandler(listAnswers));
+answerRouter.get("/:questionId/answers", requireAuth, asyncHandler(listAnswers));
 answerRouter.post("/:questionId/answers", requireAuth, asyncHandler(createAnswer));
 answerRouter.delete("/answers/:answerId", requireAuth, asyncHandler(deleteAnswer));

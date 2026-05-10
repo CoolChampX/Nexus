@@ -6,6 +6,7 @@ import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 import { useAppearance } from '@/lib/appearance';
 import { Question } from '@/lib/forum-api';
 
+import { BouncyPressable } from './bouncy-pressable';
 import { QuestionAnswerPreviewCarousel } from './question-answer-preview-carousel';
 import { ThemedText } from './themed-text';
 
@@ -180,39 +181,39 @@ export function QuestionCard({ index = 0, question, onPress, onVote }: QuestionC
 
         <View style={[styles.footer, { borderTopColor: palette.border }]}>
           <View style={styles.voteRow}>
-            <Pressable
-              hitSlop={8}
-              onPress={() => onVote?.(1)}
-              style={[
-                styles.voteButton,
-                {
-                  backgroundColor: activeUpvote ? palette.accentSoft : mutedSurface,
-                  borderColor: activeUpvote ? palette.accent : palette.border,
-                },
-              ]}>
-              <MaterialIcons
-                name="keyboard-arrow-up"
-                size={20}
-                color={activeUpvote ? palette.accent : palette.muted}
-              />
-            </Pressable>
+            <BouncyPressable hitSlop={8} onPress={() => onVote?.(1)} scaleTo={0.9}>
+              <View
+                style={[
+                  styles.voteButton,
+                  {
+                    backgroundColor: activeUpvote ? palette.accentSoft : mutedSurface,
+                    borderColor: activeUpvote ? palette.accent : palette.border,
+                  },
+                ]}>
+                <MaterialIcons
+                  name="keyboard-arrow-up"
+                  size={20}
+                  color={activeUpvote ? palette.accent : palette.muted}
+                />
+              </View>
+            </BouncyPressable>
             <ThemedText style={[styles.voteScore, { color: palette.text }]}>{voteScore}</ThemedText>
-            <Pressable
-              hitSlop={8}
-              onPress={() => onVote?.(-1)}
-              style={[
-                styles.voteButton,
-                {
-                  backgroundColor: activeDownvote ? palette.dangerSoft : mutedSurface,
-                  borderColor: activeDownvote ? palette.danger : palette.border,
-                },
-              ]}>
-              <MaterialIcons
-                name="keyboard-arrow-down"
-                size={20}
-                color={activeDownvote ? palette.danger : palette.muted}
-              />
-            </Pressable>
+            <BouncyPressable hitSlop={8} onPress={() => onVote?.(-1)} scaleTo={0.9}>
+              <View
+                style={[
+                  styles.voteButton,
+                  {
+                    backgroundColor: activeDownvote ? palette.dangerSoft : mutedSurface,
+                    borderColor: activeDownvote ? palette.danger : palette.border,
+                  },
+                ]}>
+                <MaterialIcons
+                  name="keyboard-arrow-down"
+                  size={20}
+                  color={activeDownvote ? palette.danger : palette.muted}
+                />
+              </View>
+            </BouncyPressable>
           </View>
 
           <View style={styles.metaStats}>

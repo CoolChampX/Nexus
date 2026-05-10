@@ -1,10 +1,12 @@
 import {
   createContext,
   ReactNode,
+  useEffect,
   useContext,
   useMemo,
   useState,
 } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ColorSchemeName, useColorScheme as useNativeColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
@@ -75,10 +77,40 @@ type AppearanceContextValue = {
 };
 
 const AppearanceContext = createContext<AppearanceContextValue | null>(null);
+const APPEARANCE_MODE_STORAGE_KEY = 'nexus.appearance.mode';
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const systemScheme = useNativeColorScheme();
   const [mode, setMode] = useState<ThemeMode>('system');
+
+  useEffect(() => {
+    let active = true;
+
+    const restoreMode = async () => {
+      try {
+        const storedMode = await AsyncStorage.getItem(APPEARANCE_MODE_STORAGE_KEY);
+
+        if (!active || !storedMode || !['system', 'light', 'dark'].includes(storedMode)) {
+          return;
+        }
+
+        setMode(storedMode as ThemeMode);
+      } catch {
+        // Keep the system mode fallback when storage is unavailable.
+      }
+    };
+
+    void restoreMode();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const persistMode = (nextMode: ThemeMode) => {
+    setMode(nextMode);
+    void AsyncStorage.setItem(APPEARANCE_MODE_STORAGE_KEY, nextMode).catch(() => undefined);
+  };
 
   const resolvedScheme = (mode === 'system' ? systemScheme ?? 'light' : mode) as 'light' | 'dark';
 
@@ -87,22 +119,14 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       mode,
       resolvedScheme,
       palette: palettes[resolvedScheme],
-      setMode,
+      setMode: persistMode,
       toggleTheme: () => {
-        setMode((current) => {
-          if (current === 'system') {
-            return 'light';
-          }
-
-          if (current === 'light') {
-            return 'dark';
-          }
-
-          return 'system';
-        });
+        const nextMode =
+          mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system';
+        persistMode(nextMode);
       },
     }),
-    [mode, resolvedScheme, setMode]
+    [mode, resolvedScheme]
   );
 
   return <AppearanceContext.Provider value={value}>{children}</AppearanceContext.Provider>;

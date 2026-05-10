@@ -50,6 +50,7 @@ export type Answer = {
   codeSnippet: string;
   authorId: string;
   voteScore: number;
+  currentUserVote?: -1 | 0 | 1;
   author?: FeedAuthor;
   createdAt: string;
   updatedAt: string;
@@ -336,7 +337,9 @@ export const forumApi = {
       auth: true,
     }),
   listAnswers: (questionId: string) =>
-    request<Answer[]>(`/api/questions/${questionId}/answers`),
+    request<Answer[]>(`/api/questions/${questionId}/answers`, {
+      auth: true,
+    }),
   createAnswer: (questionId: string, payload: { body: string; codeSnippet: string }) =>
     request<Answer>(`/api/questions/${questionId}/answers`, {
       method: 'POST',
