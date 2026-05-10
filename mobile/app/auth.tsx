@@ -1,9 +1,9 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -26,6 +26,8 @@ import { forumApi, SOCIAL_PROVIDERS, type SocialProvider } from '@/lib/forum-api
 import { animateLayoutTransition, enableLayoutTransitions } from '@/lib/ui-transitions';
 
 type AuthMode = 'login' | 'register';
+
+const processedAuthKeys = new Set<string>();
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -127,8 +129,15 @@ export default function AuthScreen() {
   const { login, loginWithMagicLink, loginWithOAuth, ready, register, user } = useAuth();
   const { palette, resolvedScheme } = useAppearance();
   const insets = useSafeAreaInsets();
+  const localSearchParams = useLocalSearchParams<{
+    flow?: string;
+    provider?: string;
+    userId?: string;
+    secret?: string;
+    error?: string;
+    error_description?: string;
+  }>();
   const pendingOAuthProviderRef = useRef<SocialProvider | null>(null);
-  const processedAuthResultRef = useRef<Set<string>>(new Set());
   const cardFloat = useRef(new Animated.Value(0)).current;
   const cardFlip = useRef(new Animated.Value(0)).current;
   const authOverlayOpacity = useRef(new Animated.Value(0)).current;
@@ -144,6 +153,19 @@ export default function AuthScreen() {
   const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [magicLinkEmailSent, setMagicLinkEmailSent] = useState('');
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+  const routedAuthCallbackUrl = useMemo(() => {
+    if (!localSearchParams.userId || !localSearchParams.secret) {
+      return null;
+    }
+
+    return Linking.createURL('auth', {
+      queryParams: Object.fromEntries(
+        Object.entries(localSearchParams).flatMap(([key, value]) =>
+          typeof value === 'string' ? [[key, value]] : []
+        )
+      ),
+    });
+  }, [localSearchParams]);
   const heroTopPadding = Math.max(insets.top + 14, 28);
   const isDark = resolvedScheme === 'dark';
   const shellBackground = isDark ? '#120F21' : '#F4EDF7';
@@ -331,11 +353,11 @@ export default function AuthScreen() {
       queryParams.secret
     )}`;
 
-    if (processedAuthResultRef.current.has(authKey)) {
+    if (processedAuthKeys.has(authKey)) {
       return;
     }
 
-    processedAuthResultRef.current.add(authKey);
+    processedAuthKeys.add(authKey);
     setAuthSubmitting(true);
 
     try {
@@ -354,7 +376,7 @@ export default function AuthScreen() {
 
       pendingOAuthProviderRef.current = null;
     } catch (error) {
-      processedAuthResultRef.current.delete(authKey);
+      processedAuthKeys.delete(authKey);
       setAuthSubmitting(false);
       Alert.alert(
         'Could not continue',
@@ -364,6 +386,14 @@ export default function AuthScreen() {
       setSocialLoading(null);
     }
   }, [loginWithOAuth, loginWithMagicLink]);
+
+  useEffect(() => {
+    if (!routedAuthCallbackUrl) {
+      return;
+    }
+
+    void completeAuthFromUrl(routedAuthCallbackUrl);
+  }, [completeAuthFromUrl, routedAuthCallbackUrl]);
 
   useEffect(() => {
     void Linking.getInitialURL().then((url) => {
@@ -420,11 +450,6 @@ export default function AuthScreen() {
       }
 
       const { queryParams } = Linking.parse(result.url);
-
-      if (queryParams?.userId && queryParams?.secret) {
-        await completeAuthFromUrl(result.url);
-        return;
-      }
 
       if (queryParams?.error) {
         const errorDescription =
