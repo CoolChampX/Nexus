@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useEffect, useMemo } from 'react';
 
@@ -50,90 +51,96 @@ function ThemeRoot() {
   }, []);
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: palette.background },
-          animationDuration: 280,
-        }}>
-        <Stack.Screen name="auth" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="reset-password"
-          options={{
-            title: 'Reset Password',
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: palette.cardAlt },
-            headerTintColor: palette.text,
-            headerTitleStyle: { color: palette.text },
+    <SafeAreaProvider>
+      <ThemeProvider value={navigationTheme}>
+        <Stack
+          screenOptions={{
             contentStyle: { backgroundColor: palette.background },
-          }}
-        />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            animation: 'slide_from_right',
             animationDuration: 280,
-            fullScreenGestureEnabled: true,
-            gestureEnabled: true,
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: palette.cardAlt },
-            headerTintColor: palette.text,
-            headerTitleStyle: { color: palette.text },
-            contentStyle: { backgroundColor: palette.background },
-          }}
+          }}>
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="reset-password"
+            options={{
+              title: 'Reset Password',
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: palette.cardAlt },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              contentStyle: { backgroundColor: palette.background },
+            }}
+          />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="profile"
+            options={{
+              title: 'Profile',
+              animation: 'slide_from_right',
+              animationDuration: 280,
+              fullScreenGestureEnabled: true,
+              gestureEnabled: true,
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: palette.cardAlt },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              contentStyle: { backgroundColor: palette.background },
+            }}
+          />
+          <Stack.Screen
+            name="questions/[questionId]"
+            options={{
+              title: 'Thread',
+              headerBackTitle: 'Feed',
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: palette.cardAlt },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              contentStyle: { backgroundColor: palette.background },
+            }}
+          />
+          <Stack.Screen
+            name="modal"
+            options={{
+              presentation: 'modal',
+              title: 'Modal',
+              headerStyle: { backgroundColor: palette.cardAlt },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              contentStyle: { backgroundColor: palette.background },
+            }}
+          />
+          <Stack.Screen
+            name="edit-profile"
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              animationDuration: 280,
+              gestureEnabled: true,
+              title: 'Edit Profile',
+              headerStyle: { backgroundColor: palette.card },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              contentStyle: { backgroundColor: palette.background },
+            }}
+          />
+          <Stack.Screen
+            name="ai-history"
+            options={{
+              title: 'AI Explainer History',
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: palette.cardAlt },
+              headerTintColor: palette.text,
+              headerTitleStyle: { color: palette.text },
+              contentStyle: { backgroundColor: palette.background },
+            }}
+          />
+        </Stack>
+        <StatusBar
+          style={resolvedScheme === 'dark' ? 'light' : 'dark'}
+          backgroundColor={palette.background}
+          translucent={false}
         />
-        <Stack.Screen
-          name="questions/[questionId]"
-          options={{
-            title: 'Thread',
-            headerBackTitle: 'Feed',
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: palette.cardAlt },
-            headerTintColor: palette.text,
-            headerTitleStyle: { color: palette.text },
-            contentStyle: { backgroundColor: palette.background },
-          }}
-        />
-        <Stack.Screen
-          name="modal"
-          options={{
-            presentation: 'modal',
-            title: 'Modal',
-            headerStyle: { backgroundColor: palette.cardAlt },
-            headerTintColor: palette.text,
-            headerTitleStyle: { color: palette.text },
-            contentStyle: { backgroundColor: palette.background },
-          }}
-        />
-        <Stack.Screen
-          name="edit-profile"
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-            animationDuration: 280,
-            gestureEnabled: true,
-            title: 'Edit Profile',
-            headerStyle: { backgroundColor: palette.card },
-            headerTintColor: palette.text,
-            headerTitleStyle: { color: palette.text },
-            contentStyle: { backgroundColor: palette.background },
-          }}
-        />
-        <Stack.Screen
-          name="ai-history"
-          options={{
-            title: 'AI Explainer History',
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: palette.cardAlt },
-            headerTintColor: palette.text,
-            headerTitleStyle: { color: palette.text },
-            contentStyle: { backgroundColor: palette.background },
-          }}
-        />
-      </Stack>
-      <StatusBar style={resolvedScheme === 'dark' ? 'light' : 'dark'} />
-    </ThemeProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

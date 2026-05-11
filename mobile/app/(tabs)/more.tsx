@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NexusLogo } from '@/components/nexus-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -11,10 +12,11 @@ import { useAppearance } from '@/lib/appearance';
 export default function MoreScreen() {
   const { logout, user } = useAuth();
   const { mode, resolvedScheme, palette } = useAppearance();
+  const insets = useSafeAreaInsets();
 
   return (
     <ScrollView style={[styles.screen, { backgroundColor: palette.background }]} contentContainerStyle={styles.content}>
-      <View style={[styles.heroCard, { backgroundColor: palette.hero }]}>
+      <View style={[styles.heroCard, { backgroundColor: palette.hero, paddingTop: Math.max(insets.top + 18, 34) }]}>
         <NexusLogo inverted flushLeft />
         <ThemedText
           style={[

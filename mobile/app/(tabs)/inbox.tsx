@@ -10,6 +10,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NexusLogo } from '@/components/nexus-logo';
 import { ThemedText } from '@/components/themed-text';
@@ -35,6 +36,7 @@ const formatRelativeTime = (value: string) => {
 
 export default function InboxScreen() {
   const { palette } = useAppearance();
+  const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
   const {
     notifications,
@@ -83,7 +85,7 @@ export default function InboxScreen() {
       style={[styles.screen, { backgroundColor: palette.background }]}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} />}>
-      <View style={[styles.heroCard, { backgroundColor: palette.hero }]}>
+      <View style={[styles.heroCard, { backgroundColor: palette.hero, paddingTop: Math.max(insets.top + 18, 34) }]}>
         <View style={styles.heroHeader}>
           <NexusLogo inverted flushLeft />
           {unreadCount > 0 ? (

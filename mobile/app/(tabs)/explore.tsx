@@ -101,6 +101,7 @@ export default function QuestionsScreen() {
     start: 0,
     end: 0,
   });
+  const headerTopPadding = Math.max(insets.top + 18, 34);
   const toolbarBottom = Platform.OS === 'android' ? 0 : Math.max(keyboardHeight - insets.bottom, 0);
 
   useEffect(() => {
@@ -271,6 +272,7 @@ export default function QuestionsScreen() {
           contentContainerStyle={[
             styles.content,
             {
+              paddingTop: 0,
               paddingBottom:
                 96 +
                 (keyboardHeight > 0 && activeCodeField !== null
@@ -278,7 +280,7 @@ export default function QuestionsScreen() {
                   : 0),
             },
           ]}>
-          <View style={[styles.headerCard, { backgroundColor: palette.hero }]}>
+          <View style={[styles.headerCard, { backgroundColor: palette.hero, paddingTop: headerTopPadding }]}>
             <NexusLogo inverted flushLeft />
           </View>
 
