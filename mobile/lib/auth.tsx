@@ -5,7 +5,6 @@ import {
   startTransition,
   useCallback,
   useEffect,
-  useEffectEvent,
   useContext,
   useMemo,
   useState,
@@ -236,11 +235,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [syncSession]);
 
-  const handleAppStateChange = useEffectEvent((nextState: string) => {
+  const handleAppStateChange = useCallback((nextState: string) => {
     if (nextState === 'active') {
       void syncSession();
     }
-  });
+  }, [syncSession]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
