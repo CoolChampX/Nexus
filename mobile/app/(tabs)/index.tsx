@@ -1,9 +1,10 @@
 import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   Animated,
   Easing,
   FlatList,
@@ -52,7 +53,7 @@ const getOptimisticVoteState = (
 
 export default function HomeScreen() {
   const isFocused = useIsFocused();
-  const { ready, user } = useAuth();
+  const { ready, isRefreshingSession, syncSession, user } = useAuth();
   const { palette, resolvedScheme } = useAppearance();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -88,7 +89,11 @@ export default function HomeScreen() {
     setSavedFilters(user?.preferredTags ?? []);
   }, [user?.preferredTags]);
 
-  const loadQuestions = async (mode: 'initial' | 'refresh' = 'initial') => {
+  const loadQuestions = useCallback(async (mode: 'initial' | 'refresh' = 'initial') => {
+    if (!user) {
+      return;
+    }
+
     if (mode === 'initial') {
       setLoading(true);
     } else {
@@ -105,7 +110,7 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user]);
 
   const handleVote = async (questionId: string, value: -1 | 1) => {
     const previousQuestion = questions.find((question) => question._id === questionId);
@@ -147,10 +152,34 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    if (isFocused) {
+    if (isFocused && ready && user && !isRefreshingSession) {
       void loadQuestions();
     }
-  }, [isFocused]);
+  }, [isFocused, isRefreshingSession, loadQuestions, ready, user]);
+
+  const handleAppStateChange = useEffectEvent((nextState: string) => {
+    if (nextState !== 'active' || !ready) {
+      return;
+    }
+
+    void (async () => {
+      const stillAuthenticated = await syncSession();
+
+      if (stillAuthenticated && isFocused) {
+        await loadQuestions('refresh');
+      }
+    })();
+  });
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      handleAppStateChange(nextState);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleAppStateChange]);
 
   const filteredQuestions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -294,11 +323,13 @@ export default function HomeScreen() {
     }
   };
 
-  if (loading) {
+  if (loading || !ready || isRefreshingSession) {
     return (
       <View style={[styles.loadingScreen, { backgroundColor: palette.background }]}>
         <ActivityIndicator size="large" color={palette.accent} />
-        <ThemedText style={{ color: palette.muted }}>Loading the latest questions...</ThemedText>
+        <ThemedText style={{ color: palette.muted }}>
+          {isRefreshingSession ? 'Refreshing your session...' : 'Loading the latest questions...'}
+        </ThemedText>
       </View>
     );
   }

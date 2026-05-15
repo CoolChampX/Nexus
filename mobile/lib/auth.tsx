@@ -3,11 +3,14 @@ import {
   createContext,
   ReactNode,
   startTransition,
+  useCallback,
   useEffect,
+  useEffectEvent,
   useContext,
   useMemo,
   useState,
 } from 'react';
+import { AppState } from 'react-native';
 
 import {
   forumApi,
@@ -20,6 +23,7 @@ import {
 
 type AuthContextValue = {
   ready: boolean;
+  isRefreshingSession: boolean;
   user: AuthUser | null;
   login: (payload: { email: string; password: string }) => Promise<void>;
   register: (payload: { name: string; email: string; password: string }) => Promise<void>;
@@ -27,6 +31,7 @@ type AuthContextValue = {
   loginWithMagicLink: (payload: { userId: string; secret: string }) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
+  syncSession: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -38,17 +43,69 @@ type StoredAuthSession = AuthResponse;
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
+  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
 
-  const persistAuth = async (nextAuth: StoredAuthSession | null) => {
+  const persistAuth = useCallback(async (nextAuth: StoredAuthSession | null) => {
     if (!nextAuth) {
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
       return;
     }
 
     await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextAuth));
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const clearAuthState = useCallback(async () => {
+    await persistAuth(null);
+    setApiSessionToken('');
+    setApiUserId(GUEST_USER_ID);
+
+    startTransition(() => {
+      setUser(null);
+    });
+  }, [persistAuth]);
+
+  const syncSession = useCallback(async () => {
+    setIsRefreshingSession(true);
+
+    try {
+      const storedAuthJson = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+
+      if (!storedAuthJson) {
+        await clearAuthState();
+        return false;
+      }
+
+      const storedAuth = JSON.parse(storedAuthJson) as StoredAuthSession;
+      setApiSessionToken(storedAuth.session.token);
+      setApiUserId(storedAuth.user.id);
+
+      startTransition(() => {
+        setUser(storedAuth.user);
+      });
+
+      try {
+        const profile = await forumApi.getCurrentUser();
+
+        startTransition(() => {
+          setUser(profile);
+        });
+
+        await persistAuth({
+          ...storedAuth,
+          user: profile,
+        });
+
+        return true;
+      } catch {
+        await clearAuthState();
+        return false;
+      }
+    } finally {
+      setIsRefreshingSession(false);
+    }
+  }, [clearAuthState, persistAuth]);
+
+  const refreshProfile = useCallback(async () => {
     if (!user?.id) {
       return;
     }
@@ -72,9 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ...storedAuth,
       user: profile,
     });
-  };
+  }, [persistAuth, user?.id]);
 
-  const login = async ({ email, password }: { email: string; password: string }) => {
+  const login = useCallback(async ({ email, password }: { email: string; password: string }) => {
     const response = await forumApi.login({
       email: email.trim(),
       password,
@@ -86,9 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.user);
     });
     await persistAuth(response);
-  };
+  }, [persistAuth]);
 
-  const register = async ({
+  const register = useCallback(async ({
     name,
     email,
     password,
@@ -109,9 +166,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.user);
     });
     await persistAuth(response);
-  };
+  }, [persistAuth]);
 
-  const loginWithOAuth = async ({
+  const loginWithOAuth = useCallback(async ({
     provider: _provider,
     userId,
     secret,
@@ -131,9 +188,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.user);
     });
     await persistAuth(response);
-  };
+  }, [persistAuth]);
 
-  const loginWithMagicLink = async ({
+  const loginWithMagicLink = useCallback(async ({
     userId,
     secret,
   }: {
@@ -151,65 +208,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.user);
     });
     await persistAuth(response);
-  };
+  }, [persistAuth]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     void forumApi.logout().catch(() => undefined);
-    void persistAuth(null);
     startTransition(() => {
       setApiSessionToken('');
       setApiUserId(GUEST_USER_ID);
       setUser(null);
     });
-  };
+    void persistAuth(null);
+  }, [persistAuth]);
 
   useEffect(() => {
     let active = true;
 
     const bootstrap = async () => {
       try {
-        const storedAuthJson = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-
-        if (!storedAuthJson) {
-          setApiSessionToken('');
-          setApiUserId(GUEST_USER_ID);
-          return;
-        }
-
-        const storedAuth = JSON.parse(storedAuthJson) as StoredAuthSession;
-        setApiSessionToken(storedAuth.session.token);
-        setApiUserId(storedAuth.user.id);
-
-        if (active) {
-          startTransition(() => {
-            setUser(storedAuth.user);
-          });
-        }
-
-        try {
-          const profile = await forumApi.getCurrentUser();
-
-          if (active) {
-            startTransition(() => {
-              setUser(profile);
-            });
-          }
-
-          await persistAuth({
-            ...storedAuth,
-            user: profile,
-          });
-        } catch {
-          await persistAuth(null);
-          setApiSessionToken('');
-          setApiUserId(GUEST_USER_ID);
-
-          if (active) {
-            startTransition(() => {
-              setUser(null);
-            });
-          }
-        }
+        await syncSession();
       } finally {
         if (active) {
           setReady(true);
@@ -222,11 +238,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [syncSession]);
+
+  const handleAppStateChange = useEffectEvent((nextState: string) => {
+    if (nextState === 'active') {
+      void syncSession();
+    }
+  });
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      handleAppStateChange(nextState);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleAppStateChange]);
 
   const value = useMemo(
     () => ({
       ready,
+      isRefreshingSession,
       user,
       login,
       register,
@@ -234,8 +267,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithMagicLink,
       logout,
       refreshProfile,
+      syncSession,
     }),
-    [ready, user]
+    [isRefreshingSession, ready, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
