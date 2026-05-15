@@ -1,10 +1,9 @@
 import { useIsFocused } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  AppState,
   Animated,
   Easing,
   FlatList,
@@ -37,6 +36,9 @@ const ASK_BUTTON_GAP = 12;
 
 type FeedTab = (typeof FEED_TABS)[number];
 
+const isAuthErrorMessage = (message: string) =>
+  message === 'Not authenticated.' || message === 'Unauthorized' || message === 'User not found.';
+
 const getOptimisticVoteState = (
   currentVote: -1 | 0 | 1 | undefined,
   currentScore: number,
@@ -53,7 +55,7 @@ const getOptimisticVoteState = (
 
 export default function HomeScreen() {
   const isFocused = useIsFocused();
-  const { ready, isRefreshingSession, syncSession, user } = useAuth();
+  const { logout, ready, isRefreshingSession, user } = useAuth();
   const { palette, resolvedScheme } = useAppearance();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -105,12 +107,22 @@ export default function HomeScreen() {
       const nextQuestions = await forumApi.listQuestions();
       setQuestions(nextQuestions);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'Could not load questions');
+      const message = nextError instanceof Error ? nextError.message : 'Could not load questions';
+
+      if (isAuthErrorMessage(message)) {
+        setQuestions([]);
+        setError('');
+        logout();
+        router.replace('/auth');
+        return;
+      }
+
+      setError(message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [logout, user]);
 
   const handleVote = async (questionId: string, value: -1 | 1) => {
     const previousQuestion = questions.find((question) => question._id === questionId);
@@ -157,29 +169,11 @@ export default function HomeScreen() {
     }
   }, [isFocused, isRefreshingSession, loadQuestions, ready, user]);
 
-  const handleAppStateChange = useEffectEvent((nextState: string) => {
-    if (nextState !== 'active' || !ready) {
-      return;
-    }
-
-    void (async () => {
-      const stillAuthenticated = await syncSession();
-
-      if (stillAuthenticated && isFocused) {
-        await loadQuestions('refresh');
-      }
-    })();
-  });
-
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      handleAppStateChange(nextState);
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [handleAppStateChange]);
+    if (isRefreshingSession) {
+      setError('');
+    }
+  }, [isRefreshingSession]);
 
   const filteredQuestions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

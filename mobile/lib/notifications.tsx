@@ -26,8 +26,11 @@ type NotificationsContextValue = {
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
 
+const isAuthErrorMessage = (message: string) =>
+  message === 'Not authenticated.' || message === 'Unauthorized' || message === 'User not found.';
+
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const { logout, user } = useAuth();
+  const { isRefreshingSession, logout, user } = useAuth();
   const [notifications, setNotificationsState] = useState<InboxNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const isRefreshingRef = useRef(false);
@@ -49,6 +52,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, [logout, setNotifications]);
 
   const refreshNotifications = useCallback(async () => {
+    if (isRefreshingSession) {
+      return;
+    }
+
     if (!user?.id) {
       setNotifications([]);
       return;
@@ -64,7 +71,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       const nextNotifications = await forumApi.listNotifications();
       setNotifications(nextNotifications);
     } catch (error) {
-      if (error instanceof Error && error.message === 'User not found.') {
+      if (error instanceof Error && isAuthErrorMessage(error.message)) {
         handleMissingUser();
         return;
       }
@@ -73,9 +80,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     } finally {
       isRefreshingRef.current = false;
     }
-  }, [handleMissingUser, setNotifications, user?.id]);
+  }, [handleMissingUser, isRefreshingSession, setNotifications, user?.id]);
 
   const refreshUnreadCount = useCallback(async () => {
+    if (isRefreshingSession) {
+      return;
+    }
+
     if (!user?.id) {
       startTransition(() => {
         setUnreadCount(0);
@@ -90,14 +101,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         setUnreadCount(response.unreadCount);
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'User not found.') {
+      if (error instanceof Error && isAuthErrorMessage(error.message)) {
         handleMissingUser();
         return;
       }
 
       console.warn('Failed to refresh unread notification count', error);
     }
-  }, [handleMissingUser, user?.id]);
+  }, [handleMissingUser, isRefreshingSession, user?.id]);
 
   const markNotificationRead = useCallback(async (notificationId: string) => {
     const notification = notifications.find((item) => item._id === notificationId);
@@ -130,6 +141,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (isRefreshingSession) {
+      return;
+    }
+
     if (!user?.id) {
       setNotifications([]);
       return;
@@ -144,7 +159,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }, 30000);
 
     return () => clearInterval(intervalId);
-  }, [refreshNotifications, refreshUnreadCount, setNotifications, user?.id]);
+  }, [isRefreshingSession, refreshNotifications, refreshUnreadCount, setNotifications, user?.id]);
 
   const value = useMemo(
     () => ({

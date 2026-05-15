@@ -79,10 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setApiSessionToken(storedAuth.session.token);
       setApiUserId(storedAuth.user.id);
 
-      startTransition(() => {
-        setUser(storedAuth.user);
-      });
-
       try {
         const profile = await forumApi.getCurrentUser();
 
