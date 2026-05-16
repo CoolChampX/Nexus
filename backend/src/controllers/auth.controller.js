@@ -39,7 +39,9 @@ const buildAuthPayload = (user) => ({
   location: user.location,
   website: user.website,
   avatarImageUrl: buildAvatarImageUrl(user.name, user.avatarColor, user.avatarImageUrl),
+  avatarImagePublicId: user.avatarImagePublicId,
   bannerImageUrl: user.bannerImageUrl,
+  bannerImagePublicId: user.bannerImagePublicId,
   avatarColor: resolveAvatarColor(user.avatarColor),
   preferredTags: user.preferredTags,
   joinedAt: user.createdAt

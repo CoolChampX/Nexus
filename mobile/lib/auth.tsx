@@ -29,7 +29,7 @@ type AuthContextValue = {
   loginWithOAuth: (payload: { provider: SocialProvider; userId: string; secret: string }) => Promise<void>;
   loginWithMagicLink: (payload: { userId: string; secret: string }) => Promise<void>;
   logout: () => void;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: (nextProfile?: AuthUser | null) => Promise<void>;
   syncSession: () => Promise<boolean>;
 };
 
@@ -100,7 +100,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearAuthState, persistAuth]);
 
-  const refreshProfile = useCallback(async () => {
+  const refreshProfile = useCallback(async (nextProfile?: AuthUser | null) => {
+    const profileToPersist = nextProfile ?? null;
+
+    if (profileToPersist) {
+      startTransition(() => {
+        setUser(profileToPersist);
+      });
+
+      const storedAuthJson = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+
+      if (!storedAuthJson) {
+        await persistAuth(null);
+        return;
+      }
+
+      const storedAuth = JSON.parse(storedAuthJson) as StoredAuthSession;
+      await persistAuth({
+        ...storedAuth,
+        user: profileToPersist,
+      });
+      return;
+    }
+
     if (!user?.id) {
       return;
     }

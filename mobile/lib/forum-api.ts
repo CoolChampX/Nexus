@@ -100,7 +100,9 @@ export type AuthUser = {
   location: string;
   website: string;
   avatarImageUrl: string;
+  avatarImagePublicId: string;
   bannerImageUrl: string;
+  bannerImagePublicId: string;
   avatarColor: string;
   preferredTags: string[];
   joinedAt: string;

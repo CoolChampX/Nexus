@@ -65,9 +65,9 @@ export default function EditProfileScreen() {
       setBio(response.bio);
       setLocation(response.location);
       setAvatarImageUrl(response.avatarImageUrl);
-      setAvatarImagePublicId('');
+      setAvatarImagePublicId(response.avatarImagePublicId);
       setBannerImageUrl(response.bannerImageUrl);
-      setBannerImagePublicId('');
+      setBannerImagePublicId(response.bannerImagePublicId);
     };
 
     void loadProfile();
@@ -222,7 +222,7 @@ export default function EditProfileScreen() {
       const nextBannerImageUrl = nextBannerUpload?.secureUrl ?? bannerImageUrl;
       const nextBannerPublicId = nextBannerUpload?.publicId ?? bannerImagePublicId;
 
-      await forumApi.updateCurrentUser({
+      const updatedProfile = await forumApi.updateCurrentUser({
         name,
         headline,
         bio,
@@ -233,12 +233,15 @@ export default function EditProfileScreen() {
         bannerImagePublicId: nextBannerPublicId,
       });
 
-      setAvatarImageUrl(nextAvatarImageUrl);
-      setAvatarImagePublicId(nextAvatarPublicId);
-      setBannerImageUrl(nextBannerImageUrl);
-      setBannerImagePublicId(nextBannerPublicId);
+      setProfile(updatedProfile);
+      setAvatarImageUrl(updatedProfile.avatarImageUrl);
+      setAvatarImagePublicId(updatedProfile.avatarImagePublicId);
+      setBannerImageUrl(updatedProfile.bannerImageUrl);
+      setBannerImagePublicId(updatedProfile.bannerImagePublicId);
       setPendingAvatarAsset(null);
       setPendingBannerAsset(null);
+
+      await refreshProfile(updatedProfile);
 
       if (newPassword.trim()) {
         await forumApi.changeCurrentUserPassword({
@@ -246,7 +249,6 @@ export default function EditProfileScreen() {
         });
       }
 
-      await refreshProfile();
       closeScreen();
     } catch (error) {
       Alert.alert('Could not update profile', error instanceof Error ? error.message : 'Unknown error');
