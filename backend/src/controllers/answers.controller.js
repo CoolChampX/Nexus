@@ -4,6 +4,7 @@ import { Vote } from "../models/Vote.js";
 import { User } from "../models/User.js";
 import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
+import { canModerateResource } from "../utils/permissions.js";
 import {
   createAnswerNotifications,
   deleteNotificationsForAnswer
@@ -98,8 +99,8 @@ export const deleteAnswer = async (req, res) => {
     throw new ApiError(404, "Answer not found");
   }
 
-  if (answer.authorId !== req.user.id) {
-    throw new ApiError(403, "You can only delete your own answers.");
+  if (!canModerateResource(req.user, answer.authorId)) {
+    throw new ApiError(403, "You can only delete your own answers unless you are an admin.");
   }
 
   await Promise.all([

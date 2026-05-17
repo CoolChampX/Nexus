@@ -1,6 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { findValidSession } from "../utils/session.js";
 import { User } from "../models/User.js";
+import { canManageAdminRoles, resolveUserRole } from "../utils/permissions.js";
 
 export const requireAuth = async (req, _res, next) => {
   const authorizationHeader = req.header("authorization");
@@ -29,7 +30,9 @@ export const requireAuth = async (req, _res, next) => {
   req.user = {
     id: user.userId,
     name: user.name,
-    email: user.email
+    email: user.email,
+    role: resolveUserRole(user),
+    canManageAdmins: canManageAdminRoles(user)
   };
   req.userDocument = user;
   req.authSession = session;

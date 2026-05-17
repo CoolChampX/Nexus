@@ -3,6 +3,7 @@ import { Answer } from "../models/Answer.js";
 import { User } from "../models/User.js";
 import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
+import { canModerateResource } from "../utils/permissions.js";
 import { createCommentNotifications } from "../services/notification.service.js";
 
 const buildCommentPayload = (comment, { author = null, questionId = null, answerId = null, postId = null } = {}) => ({
@@ -102,8 +103,8 @@ export const deleteComment = async (req, res) => {
     throw new ApiError(404, "Comment not found.");
   }
 
-  if (comment.authorId !== req.user.id) {
-    throw new ApiError(403, "You can only delete your own comments.");
+  if (!canModerateResource(req.user, comment.authorId)) {
+    throw new ApiError(403, "You can only delete your own comments unless you are an admin.");
   }
 
   await comment.deleteOne();

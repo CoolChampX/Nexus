@@ -10,6 +10,7 @@ import { User } from "../models/User.js";
 import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
+import { canManageAdminRoles, resolveUserRole } from "../utils/permissions.js";
 import { createUserSession, revokeSessionToken, revokeUserSessions } from "../utils/session.js";
 
 const createUserId = (name, email) => {
@@ -34,6 +35,8 @@ const buildAuthPayload = (user) => ({
   id: user.userId,
   name: user.name,
   email: user.email,
+  role: resolveUserRole(user),
+  canManageAdmins: canManageAdminRoles(user),
   headline: user.headline,
   bio: user.bio,
   location: user.location,
@@ -50,6 +53,17 @@ const buildAuthPayload = (user) => ({
 const buildAuthResponse = async (user) => ({
   user: buildAuthPayload(user),
   session: await createUserSession(user.userId)
+});
+
+const buildAdminUserPayload = (user) => ({
+  id: user.userId,
+  userId: user.userId,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  effectiveRole: resolveUserRole(user),
+  canManageAdmins: canManageAdminRoles(user),
+  joinedAt: user.createdAt
 });
 
 const destroyCloudinaryImage = async (publicId) => {
@@ -587,6 +601,56 @@ export const getCurrentUser = async (req, res) => {
   const profile = await buildProfilePayload(req.userDocument);
 
   res.json(profile);
+};
+
+export const listAdminUsers = async (req, res) => {
+  if (!canManageAdminRoles(req.user)) {
+    throw new ApiError(403, "Only the primary admins can manage admin access.");
+  }
+
+  const query = String(req.query.q || "").trim();
+  const filters = query
+    ? {
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+          { userId: { $regex: query, $options: "i" } }
+        ]
+      }
+    : {};
+
+  const users = await User.find(filters)
+    .select("userId name email role createdAt")
+    .sort({ createdAt: -1 })
+    .limit(25)
+    .lean();
+
+  res.json(users.map((user) => buildAdminUserPayload(user)));
+};
+
+export const updateUserRole = async (req, res) => {
+  if (!canManageAdminRoles(req.user)) {
+    throw new ApiError(403, "Only the primary admins can manage admin access.");
+  }
+
+  const { role } = req.body;
+
+  if (role !== "user" && role !== "admin") {
+    throw new ApiError(400, "Role must be either user or admin.");
+  }
+
+  const user = await User.findOne({ userId: req.params.userId.trim() });
+
+  if (!user) {
+    throw new ApiError(404, "User not found.");
+  }
+
+  user.role = role;
+  await user.save();
+
+  res.json({
+    user: buildAdminUserPayload(user)
+  });
 };
 
 export const logoutCurrentUser = async (req, res) => {

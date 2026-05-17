@@ -6,6 +6,7 @@ import {
   completeOAuthLogin,
   completePasswordReset,
   getCurrentUser,
+  listAdminUsers,
   getOAuthUrl,
   loginUser,
   logoutCurrentUser,
@@ -15,6 +16,7 @@ import {
   requestPasswordReset,
   requestMagicLink,
   registerUser,
+  updateUserRole,
   updateCurrentUser
 } from "../../controllers/auth.controller.js";
 import { requireAuth } from "../../middleware/auth.js";
@@ -37,3 +39,5 @@ authRouter.post("/me/password", requireAuth, asyncHandler(changeCurrentUserPassw
 authRouter.post("/logout", requireAuth, asyncHandler(logoutCurrentUser));
 authRouter.get("/me", requireAuth, asyncHandler(getCurrentUser));
 authRouter.put("/me", requireAuth, asyncHandler(updateCurrentUser));
+authRouter.get("/admin/users", requireAuth, asyncHandler(listAdminUsers));
+authRouter.put("/admin/users/:userId/role", requireAuth, asyncHandler(updateUserRole));

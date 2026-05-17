@@ -5,6 +5,7 @@ import { Vote } from "../models/Vote.js";
 import { User } from "../models/User.js";
 import { buildAvatarImageUrl, resolveAvatarColor } from "../utils/avatar.js";
 import { ApiError } from "../utils/ApiError.js";
+import { canModerateResource } from "../utils/permissions.js";
 import { deleteNotificationsForQuestion } from "../services/notification.service.js";
 
 const buildQuestionPayload = (question, { answerCount = 0, author = null, currentUserVote = 0 } = {}) => ({
@@ -107,8 +108,8 @@ export const deleteQuestion = async (req, res) => {
     throw new ApiError(404, "Question not found");
   }
 
-  if (question.authorId !== req.user.id) {
-    throw new ApiError(403, "You can only delete your own questions.");
+  if (!canModerateResource(req.user, question.authorId)) {
+    throw new ApiError(403, "You can only delete your own questions unless you are an admin.");
   }
 
   const answers = await Answer.find({ questionId: question._id }).select("_id").lean();

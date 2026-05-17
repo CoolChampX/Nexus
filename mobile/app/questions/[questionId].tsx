@@ -183,6 +183,7 @@ function CommentThread({
   setInputRef,
   onDeleteComment,
   currentUserId,
+  isAdmin,
   deletingCommentId,
   palette,
 }: {
@@ -194,6 +195,7 @@ function CommentThread({
   setInputRef: (instance: TextInput | null) => void;
   onDeleteComment: (commentId: string) => void;
   currentUserId?: string;
+  isAdmin: boolean;
   deletingCommentId: string | null;
   palette: ReturnType<typeof useAppearance>['palette'];
 }) {
@@ -239,7 +241,7 @@ function CommentThread({
                   <ThemedText style={[styles.commentMeta, { color: palette.muted }]}>
                     {formatDateTime(comment.createdAt)}
                   </ThemedText>
-                  {(comment.author?.id || comment.authorId) === currentUserId ? (
+                  {(comment.author?.id || comment.authorId) === currentUserId || isAdmin ? (
                     <BouncyPressable
                       onPress={() => onDeleteComment(comment._id)}
                       disabled={deletingCommentId === comment._id}
@@ -333,6 +335,7 @@ export default function QuestionDetailScreen() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const toolbarBottom = toolbarBottomInset;
+  const isAdmin = user?.role === 'admin';
 
   const sortedAnswers = useMemo(
     () =>
@@ -769,7 +772,7 @@ export default function QuestionDetailScreen() {
           <View style={[styles.heroCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
             <View style={styles.topMetaRow}>
               <ThemedText style={[styles.kicker, { color: palette.accent }]}>Question</ThemedText>
-              {(question.author?.id || question.authorId) === user?.id ? (
+              {(question.author?.id || question.authorId) === user?.id || isAdmin ? (
                 <BouncyPressable
                   onPress={() => confirmDeleteQuestion(question._id)}
                   disabled={deletingId === question._id}
@@ -919,7 +922,7 @@ export default function QuestionDetailScreen() {
                         <ThemedText style={[styles.answerVoteSummary, { color: palette.muted }]}>
                           {Math.max(answer.voteScore, 0)} upvotes
                         </ThemedText>
-                        {(answer.author?.id || answer.authorId) === user?.id ? (
+                        {(answer.author?.id || answer.authorId) === user?.id || isAdmin ? (
                           <View style={styles.answerActions}>
                             <BouncyPressable
                               onPress={() => confirmDeleteAnswer(answer._id)}
@@ -959,6 +962,7 @@ export default function QuestionDetailScreen() {
                     }}
                     onDeleteComment={confirmDeleteComment}
                     currentUserId={user?.id}
+                    isAdmin={isAdmin}
                     deletingCommentId={deletingCommentId}
                     palette={palette}
                   />

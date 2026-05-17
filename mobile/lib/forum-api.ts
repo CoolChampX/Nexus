@@ -95,6 +95,8 @@ export type AuthUser = {
   id: string;
   name: string;
   email: string;
+  role: 'user' | 'admin';
+  canManageAdmins: boolean;
   headline: string;
   bio: string;
   location: string;
@@ -138,6 +140,17 @@ export type ProfileResponse = AuthUser & {
   };
   recentQuestions: Question[];
   recentAnswers: ProfileAnswer[];
+};
+
+export type AdminUser = {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  effectiveRole: 'user' | 'admin';
+  canManageAdmins: boolean;
+  joinedAt: string;
 };
 
 export type DirectImageUploadResponse = {
@@ -320,6 +333,16 @@ export const forumApi = {
     request<{ message: string }>('/api/auth/me/password', {
       method: 'POST',
       body: payload,
+      auth: true,
+    }),
+  listAdminUsers: (query = '') =>
+    request<AdminUser[]>(`/api/auth/admin/users${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''}`, {
+      auth: true,
+    }),
+  updateUserRole: (userId: string, role: 'user' | 'admin') =>
+    request<{ user: AdminUser }>(`/api/auth/admin/users/${encodeURIComponent(userId)}/role`, {
+      method: 'PUT',
+      body: { role },
       auth: true,
     }),
   listQuestions: () =>
