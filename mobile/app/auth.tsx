@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AuthVideoOverlay } from '@/components/auth-video-overlay';
 import { NexusLogo } from '@/components/nexus-logo';
 import { ThemedText } from '@/components/themed-text';
 import { useAuth } from '@/lib/auth';
@@ -799,39 +800,13 @@ export default function AuthScreen() {
               ]}>
               <Animated.View
                 style={[
-                  styles.authOverlayCard,
-                  {
-                    backgroundColor: isDark ? 'rgba(19, 18, 31, 0.96)' : 'rgba(255, 255, 255, 0.96)',
-                    borderColor: isDark ? 'rgba(167, 139, 250, 0.24)' : 'rgba(139, 92, 246, 0.18)',
-                    transform: [{ scale: authOverlayScale }],
-                  },
+                  { transform: [{ scale: authOverlayScale }] },
                 ]}>
-                <View
-                  style={[
-                    styles.authOverlayHalo,
-                    { backgroundColor: isDark ? 'rgba(124, 58, 237, 0.26)' : 'rgba(167, 139, 250, 0.28)' },
-                  ]}
+                <AuthVideoOverlay
+                  containerStyle={styles.authOverlayCard}
+                  message={authLoadingMessage}
+                  subtitle="Preparing your workspace, profile, and real-time threads."
                 />
-                <ThemedText style={[styles.authOverlayEyebrow, { color: palette.accent }]}>
-                  AUTHENTICATING
-                </ThemedText>
-                <ThemedText style={[styles.authOverlayTitle, { color: palette.text }]}>
-                  {authLoadingMessage}
-                </ThemedText>
-                <ThemedText style={[styles.authOverlaySubtitle, { color: subtleText }]}>
-                  Preparing your workspace, profile, and real-time threads.
-                </ThemedText>
-                <View style={[styles.authProgressTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(139,92,246,0.1)' }]}>
-                  <Animated.View
-                    style={[
-                      styles.authProgressBar,
-                      {
-                        backgroundColor: palette.accent,
-                        transform: [{ translateX: glossDrift }],
-                      },
-                    ]}
-                  />
-                </View>
               </Animated.View>
             </Animated.View>
           ) : null}
@@ -855,7 +830,6 @@ const styles = StyleSheet.create({
   },
   authOverlay: {
     alignItems: 'center',
-    borderRadius: 34,
     bottom: 0,
     justifyContent: 'center',
     left: 0,
@@ -865,49 +839,9 @@ const styles = StyleSheet.create({
   },
   authOverlayCard: {
     borderRadius: 28,
-    borderWidth: 1,
-    overflow: 'hidden',
-    paddingHorizontal: 22,
-    paddingVertical: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
     width: '88%',
-  },
-  authOverlayEyebrow: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    marginBottom: 10,
-  },
-  authOverlayHalo: {
-    borderRadius: 999,
-    height: 120,
-    opacity: 0.8,
-    position: 'absolute',
-    right: -22,
-    top: -18,
-    width: 120,
-  },
-  authOverlaySubtitle: {
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 8,
-  },
-  authOverlayTitle: {
-    fontSize: 28,
-    fontWeight: '600',
-    letterSpacing: -0.7,
-    lineHeight: 33,
-    maxWidth: 260,
-  },
-  authProgressBar: {
-    borderRadius: 999,
-    height: '100%',
-    width: '42%',
-  },
-  authProgressTrack: {
-    borderRadius: 999,
-    height: 8,
-    marginTop: 18,
-    overflow: 'hidden',
   },
   backgroundAura: {
     borderRadius: 999,
