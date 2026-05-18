@@ -188,6 +188,7 @@ export default function ProfileScreen() {
   const avatarSource = avatarImageUrl.trim() || undefined;
   const profileEmail = profile.email;
   const cardBorder = resolvedScheme === 'dark' ? '#20304A' : palette.border;
+  const isAdmin = profile.role === 'admin';
 
   return (
     <Animated.ScrollView
@@ -270,13 +271,35 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.profileCopy}>
-          <ThemedText style={[styles.profileName, { color: palette.text }]}>{profile.name}</ThemedText>
+          <View style={styles.profileNameRow}>
+            <ThemedText style={[styles.profileName, { color: palette.text }]}>{profile.name}</ThemedText>
+            {isAdmin ? (
+              <View style={styles.adminBadge}>
+                <ThemedText style={styles.adminBadgeText}>Admin</ThemedText>
+              </View>
+            ) : null}
+          </View>
           <ThemedText style={[styles.profileHandle, { color: palette.muted }]}>{profileEmail}</ThemedText>
+          <ThemedText style={[styles.roleSummary, { color: isAdmin ? palette.accent : palette.muted }]}>
+            {isAdmin ? 'You are logged in as admin.' : 'You are logged in as user.'}
+          </ThemedText>
           {!!profile.headline && (
             <ThemedText style={[styles.profileHeadline, { color: palette.text }]}>{profile.headline}</ThemedText>
           )}
           {!!profile.bio && <ThemedText style={[styles.profileBio, { color: palette.muted }]}>{profile.bio}</ThemedText>}
         </View>
+
+        {profile.canManageAdmins ? (
+          <View style={styles.profileAdminActions}>
+            <Pressable
+              onPress={() => router.push('/admin')}
+              style={[styles.manageAdminsButton, { borderColor: cardBorder, backgroundColor: palette.accentSoft }]}>
+              <ThemedText style={[styles.manageAdminsButtonText, { color: palette.accent }]}>
+                Manage users and admins
+              </ThemedText>
+            </Pressable>
+          </View>
+        ) : null}
 
         <View style={styles.metaList}>
           <View style={styles.metaRow}>
@@ -508,6 +531,19 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  adminBadge: {
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 999,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  adminBadgeText: {
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '800',
+  },
   activityToggle: {
     borderRadius: 16,
     borderWidth: 1,
@@ -764,6 +800,16 @@ const styles = StyleSheet.create({
     height: 14,
     width: '44%',
   },
+  manageAdminsButton: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  manageAdminsButtonText: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
   metaList: {
     gap: 8,
   },
@@ -779,6 +825,9 @@ const styles = StyleSheet.create({
   profileBio: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  profileAdminActions: {
+    paddingHorizontal: 18,
   },
   profileCopy: {
     gap: 4,
@@ -796,6 +845,12 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '900',
     lineHeight: 40,
+  },
+  profileNameRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
   profileShell: {
     borderRadius: 28,
@@ -829,6 +884,11 @@ const styles = StyleSheet.create({
   },
   questionsList: {
     gap: 14,
+  },
+  roleSummary: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 2,
   },
   screen: {
     flex: 1,

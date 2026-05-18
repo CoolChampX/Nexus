@@ -13,6 +13,8 @@ export default function MoreScreen() {
   const { logout, user } = useAuth();
   const { mode, resolvedScheme, palette } = useAppearance();
   const insets = useSafeAreaInsets();
+  const isAdmin = user?.role === 'admin';
+  const canManageAdmins = Boolean(user?.canManageAdmins);
 
   return (
     <ScrollView style={[styles.screen, { backgroundColor: palette.background }]} contentContainerStyle={styles.content}>
@@ -24,6 +26,16 @@ export default function MoreScreen() {
             { color: resolvedScheme === 'dark' ? '#CBD5E1' : palette.muted },
           ]}>
           Signed in as {user?.name ?? 'Developer'}.
+        </ThemedText>
+        <ThemedText
+          style={[
+            styles.roleBadge,
+            {
+              backgroundColor: isAdmin ? 'rgba(250, 204, 21, 0.18)' : palette.accentSoft,
+              color: isAdmin ? '#FDE68A' : palette.accent,
+            },
+          ]}>
+          {isAdmin ? 'Logged in as admin' : 'Logged in as user'}
         </ThemedText>
       </View>
 
@@ -65,6 +77,11 @@ export default function MoreScreen() {
         <Pressable onPress={() => router.push('/(tabs)/explore')} style={[styles.linkButton, { borderColor: palette.border }]}>
           <ThemedText style={[styles.linkText, { color: palette.text }]}>Ask a question</ThemedText>
         </Pressable>
+        {canManageAdmins ? (
+          <Pressable onPress={() => router.push('/admin')} style={[styles.linkButton, { borderColor: palette.border }]}>
+            <ThemedText style={[styles.linkText, { color: palette.text }]}>Manage users</ThemedText>
+          </Pressable>
+        ) : null}
       </View>
 
       <Pressable
@@ -138,6 +155,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 12,
+  },
+  roleBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 10,
+    overflow: 'hidden',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
   rowBody: {
     fontSize: 14,

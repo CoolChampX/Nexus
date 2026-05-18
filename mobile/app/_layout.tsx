@@ -138,6 +138,21 @@ function ThemeRoot() {
                 contentStyle: { backgroundColor: palette.background },
               }}
             />
+            <Stack.Screen
+              name="admin"
+              options={{
+                title: 'Admin Panel',
+                animation: 'slide_from_right',
+                animationDuration: 280,
+                fullScreenGestureEnabled: true,
+                gestureEnabled: true,
+                headerShadowVisible: false,
+                headerStyle: { backgroundColor: palette.cardAlt },
+                headerTintColor: palette.text,
+                headerTitleStyle: { color: palette.text },
+                contentStyle: { backgroundColor: palette.background },
+              }}
+            />
           </Stack>
           {!ready || (isRefreshingSession && !!user) ? <SessionRefreshOverlay /> : null}
         </View>

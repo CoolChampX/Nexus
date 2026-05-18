@@ -2,6 +2,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const defaultPrimaryAdminEmails = [
+  "shoeba320@gmail.com",
+  "vinayaktiwari739@gmail.com"
+];
+
 const parseCsv = (value) =>
   String(value || "")
     .split(",")
@@ -23,7 +28,9 @@ export const env = {
   cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID || "",
   cloudflareImagesApiToken: process.env.CLOUDFLARE_IMAGES_API_TOKEN || "",
   cloudflareImagesDeliveryBaseUrl: process.env.CLOUDFLARE_IMAGES_DELIVERY_BASE_URL || "",
-  primaryAdminEmails: parseCsv(process.env.PRIMARY_ADMIN_EMAILS),
+  primaryAdminEmails: parseCsv(process.env.PRIMARY_ADMIN_EMAILS).length
+    ? parseCsv(process.env.PRIMARY_ADMIN_EMAILS)
+    : defaultPrimaryAdminEmails,
   primaryAdminUserIds: parseCsv(process.env.PRIMARY_ADMIN_USER_IDS),
   openAiApiKey:
     process.env.OPENAI_API_KEY || process.env.OPEN_AI_KEY || process.env.OPEN_API_KEY || "",
