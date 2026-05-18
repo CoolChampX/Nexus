@@ -229,6 +229,19 @@ export default function AuthScreen() {
   });
   const authLoadingMessages = mode === 'login' ? LOGIN_LOADING_MESSAGES : REGISTER_LOADING_MESSAGES;
   const isBusy = authSubmitting || socialLoading !== null || magicLinkLoading;
+  const showAuthVideoOverlay = authSubmitting || socialLoading !== null || magicLinkLoading;
+  const overlayMessage =
+    socialLoading !== null
+      ? `Connecting your ${SOCIAL_PROVIDER_META[socialLoading].label} account...`
+      : magicLinkLoading
+        ? 'Sending your secure sign-in link...'
+        : authLoadingMessage;
+  const overlaySubtitle =
+    socialLoading !== null
+      ? 'Hold on while we complete the redirect and bring you back into Nexus.'
+      : magicLinkLoading
+        ? 'We are preparing a one-tap sign-in link for this device.'
+        : 'Preparing your workspace, profile, and real-time threads.';
 
   useEffect(() => {
     enableLayoutTransitions();
@@ -241,18 +254,22 @@ export default function AuthScreen() {
   }, [ready, user]);
 
   useEffect(() => {
-    if (!authSubmitting) {
+    if (!showAuthVideoOverlay) {
       setAuthLoadingMessage(authLoadingMessages[0]);
       authOverlayOpacity.setValue(0);
       authOverlayScale.setValue(0.96);
       return;
     }
 
-    let messageIndex = 0;
-    const interval = setInterval(() => {
-      messageIndex = (messageIndex + 1) % authLoadingMessages.length;
-      setAuthLoadingMessage(authLoadingMessages[messageIndex]);
-    }, 1400);
+    let interval: ReturnType<typeof setInterval> | undefined;
+
+    if (authSubmitting) {
+      let messageIndex = 0;
+      interval = setInterval(() => {
+        messageIndex = (messageIndex + 1) % authLoadingMessages.length;
+        setAuthLoadingMessage(authLoadingMessages[messageIndex]);
+      }, 1400);
+    }
 
     Animated.parallel([
       Animated.timing(authOverlayOpacity, {
@@ -270,9 +287,11 @@ export default function AuthScreen() {
     ]).start();
 
     return () => {
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-  }, [authLoadingMessages, authOverlayOpacity, authOverlayScale, authSubmitting]);
+  }, [authLoadingMessages, authOverlayOpacity, authOverlayScale, authSubmitting, showAuthVideoOverlay]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -788,24 +807,23 @@ export default function AuthScreen() {
               By continuing you agree to the community guidelines and respectful collaboration standards.
             </ThemedText>
           </Animated.View>
-          {authSubmitting ? (
+          {showAuthVideoOverlay ? (
             <Animated.View
               pointerEvents="auto"
               style={[
                 styles.authOverlay,
                 {
-                  backgroundColor: isDark ? 'rgba(7, 6, 17, 0.74)' : 'rgba(244, 237, 247, 0.78)',
                   opacity: authOverlayOpacity,
                 },
               ]}>
               <Animated.View
                 style={[
+                  styles.authOverlayCard,
                   { transform: [{ scale: authOverlayScale }] },
                 ]}>
                 <AuthVideoOverlay
-                  containerStyle={styles.authOverlayCard}
-                  message={authLoadingMessage}
-                  subtitle="Preparing your workspace, profile, and real-time threads."
+                  message={overlayMessage}
+                  subtitle={overlaySubtitle}
                 />
               </Animated.View>
             </Animated.View>
@@ -829,19 +847,11 @@ const styles = StyleSheet.create({
     shadowRadius: 40,
   },
   authOverlay: {
-    alignItems: 'center',
-    bottom: 0,
-    justifyContent: 'center',
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 30,
   },
   authOverlayCard: {
-    borderRadius: 28,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    width: '88%',
+    ...StyleSheet.absoluteFillObject,
   },
   backgroundAura: {
     borderRadius: 999,

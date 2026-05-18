@@ -23,81 +23,86 @@ export function AuthVideoOverlay({
       pointerEvents="auto"
       style={[
         styles.overlay,
-        { backgroundColor: isDark ? 'rgba(5, 7, 13, 0.92)' : 'rgba(248, 247, 250, 0.94)' },
         containerStyle,
       ]}>
+      <Video
+        source={require('../assets/videos/auth-loop.mp4')}
+        isLooping
+        isMuted
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        useNativeControls={false}
+        style={styles.video}
+      />
       <View
+        pointerEvents="none"
         style={[
-          styles.videoFrame,
-          {
-            backgroundColor: isDark ? '#0B1020' : '#FFFFFF',
-            borderColor: isDark ? 'rgba(167, 139, 250, 0.2)' : 'rgba(139, 92, 246, 0.14)',
-            shadowColor: isDark ? '#020617' : '#C4B5FD',
-          },
-        ]}>
-        <Video
-          source={require('../assets/videos/auth-loop.mp4')}
-          isLooping
-          isMuted
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          style={styles.video}
-        />
-        <View
-          pointerEvents="none"
-          style={[
-            styles.videoTint,
-            { backgroundColor: isDark ? 'rgba(15, 23, 42, 0.48)' : 'rgba(248, 247, 250, 0.38)' },
-          ]}
-        />
-        <View
-          pointerEvents="none"
-          style={[
-            styles.videoAccent,
-            { backgroundColor: isDark ? 'rgba(124, 58, 237, 0.26)' : 'rgba(139, 92, 246, 0.18)' },
-          ]}
-        />
-        <View
-          pointerEvents="none"
-          style={[
-            styles.videoAccentOrb,
-            { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.16)' : 'rgba(167, 139, 250, 0.22)' },
-          ]}
-        />
+          styles.videoTint,
+          { backgroundColor: isDark ? 'rgba(2, 6, 23, 0.56)' : 'rgba(248, 247, 250, 0.48)' },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.videoAccent,
+          { backgroundColor: isDark ? 'rgba(124, 58, 237, 0.22)' : 'rgba(139, 92, 246, 0.16)' },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.videoAccentOrb,
+          { backgroundColor: isDark ? 'rgba(96, 165, 250, 0.16)' : 'rgba(167, 139, 250, 0.2)' },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.videoAccentOrb,
+          styles.videoAccentOrbBottom,
+          { backgroundColor: isDark ? 'rgba(168, 85, 247, 0.18)' : 'rgba(124, 58, 237, 0.16)' },
+        ]}
+      />
+      <View style={styles.copyWrap}>
+        <ThemedText style={[styles.message, { color: palette.text }]}>{message}</ThemedText>
+        {subtitle ? (
+          <ThemedText style={[styles.subtitle, { color: isDark ? '#CBD5E1' : palette.muted }]}>
+            {subtitle}
+          </ThemedText>
+        ) : null}
       </View>
-      <ThemedText style={[styles.message, { color: palette.text }]}>{message}</ThemedText>
-      {subtitle ? (
-        <ThemedText style={[styles.subtitle, { color: isDark ? '#CBD5E1' : palette.muted }]}>
-          {subtitle}
-        </ThemedText>
-      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  copyWrap: {
+    alignItems: 'center',
+    bottom: 72,
+    left: 24,
+    position: 'absolute',
+    right: 24,
+  },
   message: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: '800',
-    lineHeight: 20,
-    marginTop: 20,
+    lineHeight: 30,
     textAlign: 'center',
   },
   overlay: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#05070D',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    lineHeight: 18,
-    marginTop: 8,
-    maxWidth: 280,
+    lineHeight: 20,
+    marginTop: 10,
+    maxWidth: 320,
     textAlign: 'center',
   },
   video: {
-    height: '100%',
-    width: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
   videoAccent: {
     ...StyleSheet.absoluteFillObject,
@@ -111,16 +116,11 @@ const styles = StyleSheet.create({
     top: -14,
     width: 160,
   },
-  videoFrame: {
-    borderRadius: 30,
-    borderWidth: 1,
-    elevation: 14,
-    height: 260,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.24,
-    shadowRadius: 34,
-    width: 260,
+  videoAccentOrbBottom: {
+    bottom: 90,
+    left: -38,
+    right: 'auto',
+    top: 'auto',
   },
   videoTint: {
     ...StyleSheet.absoluteFillObject,
