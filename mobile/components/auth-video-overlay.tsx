@@ -6,13 +6,17 @@ import { useAppearance } from '@/lib/appearance';
 
 type AuthVideoOverlayProps = {
   containerStyle?: StyleProp<ViewStyle>;
-  message: string;
+  message?: string;
+  overlayOpacity?: number;
+  pointerEvents?: 'auto' | 'none' | 'box-none' | 'box-only';
   subtitle?: string;
 };
 
 export function AuthVideoOverlay({
   containerStyle,
   message,
+  overlayOpacity,
+  pointerEvents = 'auto',
   subtitle,
 }: AuthVideoOverlayProps) {
   const { palette, resolvedScheme } = useAppearance();
@@ -20,7 +24,7 @@ export function AuthVideoOverlay({
 
   return (
     <View
-      pointerEvents="auto"
+      pointerEvents={pointerEvents}
       style={[
         styles.overlay,
         containerStyle,
@@ -38,7 +42,11 @@ export function AuthVideoOverlay({
         pointerEvents="none"
         style={[
           styles.videoTint,
-          { backgroundColor: isDark ? 'rgba(2, 6, 23, 0.56)' : 'rgba(248, 247, 250, 0.48)' },
+          {
+            backgroundColor: isDark
+              ? `rgba(2, 6, 23, ${overlayOpacity ?? 0.56})`
+              : `rgba(248, 247, 250, ${overlayOpacity ?? 0.48})`,
+          },
         ]}
       />
       <View
@@ -63,14 +71,16 @@ export function AuthVideoOverlay({
           { backgroundColor: isDark ? 'rgba(168, 85, 247, 0.18)' : 'rgba(124, 58, 237, 0.16)' },
         ]}
       />
-      <View style={styles.copyWrap}>
-        <ThemedText style={[styles.message, { color: palette.text }]}>{message}</ThemedText>
-        {subtitle ? (
-          <ThemedText style={[styles.subtitle, { color: isDark ? '#CBD5E1' : palette.muted }]}>
-            {subtitle}
-          </ThemedText>
-        ) : null}
-      </View>
+      {message ? (
+        <View style={styles.copyWrap}>
+          <ThemedText style={[styles.message, { color: palette.text }]}>{message}</ThemedText>
+          {subtitle ? (
+            <ThemedText style={[styles.subtitle, { color: isDark ? '#CBD5E1' : palette.muted }]}>
+              {subtitle}
+            </ThemedText>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
