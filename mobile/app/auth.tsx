@@ -570,11 +570,6 @@ export default function AuthScreen() {
     <KeyboardAvoidingView
       style={[styles.screen, { backgroundColor: shellBackground }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <AuthVideoOverlay
-        containerStyle={styles.authBackgroundVideo}
-        overlayOpacity={isDark ? 0.7 : 0.58}
-        pointerEvents="none"
-      />
       <ScrollView
         contentContainerStyle={[styles.content, { paddingTop: heroTopPadding, paddingBottom: 24 + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
@@ -850,9 +845,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 22 },
     shadowOpacity: 0.2,
     shadowRadius: 40,
-  },
-  authBackgroundVideo: {
-    ...StyleSheet.absoluteFillObject,
   },
   authOverlay: {
     ...StyleSheet.absoluteFillObject,
