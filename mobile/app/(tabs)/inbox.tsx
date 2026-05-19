@@ -99,12 +99,11 @@ export default function InboxScreen() {
             </Pressable>
           ) : null}
         </View>
-        <ThemedText style={[styles.heroTitle, { color: palette.heroText || '#111827' }]}>Inbox</ThemedText>
-        <ThemedText style={[styles.heroBody, { color: palette.muted }]}>
-          {unreadCount > 0
-            ? `${unreadCount} unread update${unreadCount === 1 ? '' : 's'} waiting for you.`
-            : 'You are all caught up for now.'}
-        </ThemedText>
+        {unreadCount > 0 ? (
+          <ThemedText style={[styles.heroBody, { color: palette.muted }]}>
+            {unreadCount} unread update{unreadCount === 1 ? '' : 's'} waiting for you.
+          </ThemedText>
+        ) : null}
       </View>
 
       {notifications.length ? (

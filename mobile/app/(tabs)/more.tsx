@@ -20,23 +20,25 @@ export default function MoreScreen() {
     <ScrollView style={[styles.screen, { backgroundColor: palette.background }]} contentContainerStyle={styles.content}>
       <View style={[styles.heroCard, { backgroundColor: palette.hero, paddingTop: Math.max(insets.top + 18, 34) }]}>
         <NexusLogo inverted flushLeft />
-        <ThemedText
-          style={[
-            styles.subtitle,
-            { color: resolvedScheme === 'dark' ? '#CBD5E1' : palette.muted },
-          ]}>
-          Signed in as {user?.name ?? 'Developer'}.
-        </ThemedText>
-        <ThemedText
-          style={[
-            styles.roleBadge,
-            {
-              backgroundColor: isAdmin ? 'rgba(250, 204, 21, 0.18)' : palette.accentSoft,
-              color: isAdmin ? '#FDE68A' : palette.accent,
-            },
-          ]}>
-          {isAdmin ? 'Logged in as admin' : 'Logged in as user'}
-        </ThemedText>
+        <View style={styles.identityRow}>
+          <ThemedText
+            style={[
+              styles.subtitle,
+              { color: resolvedScheme === 'dark' ? '#CBD5E1' : palette.muted },
+            ]}>
+            Signed in as {user?.name ?? 'Developer'}.
+          </ThemedText>
+          <ThemedText
+            style={[
+              styles.roleBadge,
+              {
+                backgroundColor: isAdmin ? 'rgba(250, 204, 21, 0.18)' : palette.accentSoft,
+                color: isAdmin ? '#FDE68A' : palette.accent,
+              },
+            ]}>
+            {isAdmin ? 'Logged in as admin' : 'Logged in as user'}
+          </ThemedText>
+        </View>
       </View>
 
       <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.border }]}>
@@ -124,6 +126,13 @@ const styles = StyleSheet.create({
     paddingRight: 18,
     paddingTop: 18,
   },
+  identityRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
   iconBadge: {
     alignItems: 'center',
     borderRadius: 12,
@@ -157,11 +166,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   roleBadge: {
-    alignSelf: 'flex-start',
     borderRadius: 999,
     fontSize: 12,
     fontWeight: '800',
-    marginTop: 10,
     overflow: 'hidden',
     paddingHorizontal: 12,
     paddingVertical: 7,

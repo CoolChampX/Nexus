@@ -241,7 +241,7 @@ export default function HomeScreen() {
   const filterDrawerChipText = resolvedScheme === 'dark' ? '#E2E8F0' : palette.text;
   const filterDrawerTitleColor = resolvedScheme === 'dark' ? '#F8FAFC' : palette.text;
   const headerAvatarSource = user?.avatarImageUrl?.trim() || undefined;
-  const filterButtonActive = filterMenuOpen || appliedFilterCount > 0;
+  const filterButtonActive = filterMenuOpen;
   const filterButtonSurface =
     filterButtonActive
       ? resolvedScheme === 'dark'
@@ -812,8 +812,8 @@ const styles = StyleSheet.create({
   },
   profileAvatar: {
     borderRadius: 999,
-    height: 100,
-    width: 100,
+    height: 42,
+    width: 42,
   },
   profileButton: {
     alignItems: 'center',
