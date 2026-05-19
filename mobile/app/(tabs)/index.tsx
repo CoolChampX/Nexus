@@ -37,7 +37,10 @@ const ASK_BUTTON_GAP = 12;
 type FeedTab = (typeof FEED_TABS)[number];
 
 const isAuthErrorMessage = (message: string) =>
-  message === 'Not authenticated.' || message === 'Unauthorized' || message === 'User not found.';
+  message === 'Not authenticated.' ||
+  message === 'Unauthorized' ||
+  message === 'User not found.' ||
+  message === 'This account has been disabled. Please contact an administrator.';
 
 const getOptimisticVoteState = (
   currentVote: -1 | 0 | 1 | undefined,

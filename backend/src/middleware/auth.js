@@ -27,6 +27,10 @@ export const requireAuth = async (req, _res, next) => {
     return next(new ApiError(401, "User not found."));
   }
 
+  if (user.isDisabled) {
+    return next(new ApiError(403, "This account has been disabled. Please contact an administrator."));
+  }
+
   req.user = {
     id: user.userId,
     name: user.name,

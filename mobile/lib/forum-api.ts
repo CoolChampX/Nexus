@@ -150,6 +150,7 @@ export type AdminUser = {
   role: 'user' | 'admin';
   effectiveRole: 'user' | 'admin';
   canManageAdmins: boolean;
+  isDisabled: boolean;
   joinedAt: string;
 };
 
@@ -343,6 +344,12 @@ export const forumApi = {
     request<{ user: AdminUser }>(`/api/auth/admin/users/${encodeURIComponent(userId)}/role`, {
       method: 'PUT',
       body: { role },
+      auth: true,
+    }),
+  updateUserDisabledState: (userId: string, isDisabled: boolean) =>
+    request<{ user: AdminUser }>(`/api/auth/admin/users/${encodeURIComponent(userId)}/disabled`, {
+      method: 'PUT',
+      body: { isDisabled },
       auth: true,
     }),
   listQuestions: () =>

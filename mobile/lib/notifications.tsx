@@ -27,7 +27,10 @@ type NotificationsContextValue = {
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
 
 const isAuthErrorMessage = (message: string) =>
-  message === 'Not authenticated.' || message === 'Unauthorized' || message === 'User not found.';
+  message === 'Not authenticated.' ||
+  message === 'Unauthorized' ||
+  message === 'User not found.' ||
+  message === 'This account has been disabled. Please contact an administrator.';
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { isRefreshingSession, logout, user } = useAuth();

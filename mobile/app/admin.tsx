@@ -79,6 +79,14 @@ export default function AdminScreen() {
     await loadUsers(nextQuery);
   };
 
+  const replaceUpdatedUser = useCallback((updatedUser: AdminUser) => {
+    setUsers((current) =>
+      current.map((currentUser) =>
+        currentUser.userId === updatedUser.userId ? updatedUser : currentUser
+      )
+    );
+  }, []);
+
   const toggleRole = async (entry: AdminUser) => {
     if (entry.canManageAdmins) {
       Alert.alert('Primary admin', 'This user is a main admin and should stay managed through the primary admin list.');
@@ -100,11 +108,7 @@ export default function AdminScreen() {
               try {
                 setUpdatingUserId(entry.userId);
                 const response = await forumApi.updateUserRole(entry.userId, nextRole);
-                setUsers((current) =>
-                  current.map((currentUser) =>
-                    currentUser.userId === entry.userId ? response.user : currentUser
-                  )
-                );
+                replaceUpdatedUser(response.user);
 
                 if (user?.id === entry.userId) {
                   await refreshProfile();
@@ -112,6 +116,40 @@ export default function AdminScreen() {
               } catch (error) {
                 Alert.alert(
                   'Could not update role',
+                  error instanceof Error ? error.message : 'Unknown error'
+                );
+              } finally {
+                setUpdatingUserId(null);
+              }
+            })();
+          },
+        },
+      ]
+    );
+  };
+
+  const toggleDisabledState = async (entry: AdminUser) => {
+    const nextDisabledState = !entry.isDisabled;
+    const title = nextDisabledState ? 'Disable account' : 'Enable account';
+    const actionLabel = nextDisabledState ? 'disable' : 'enable';
+
+    Alert.alert(
+      title,
+      `Are you sure you want to ${actionLabel} ${entry.email}?${nextDisabledState ? ' This will sign them out of the app.' : ''}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: nextDisabledState ? 'Disable' : 'Enable',
+          style: nextDisabledState ? 'destructive' : 'default',
+          onPress: () => {
+            void (async () => {
+              try {
+                setUpdatingUserId(entry.userId);
+                const response = await forumApi.updateUserDisabledState(entry.userId, nextDisabledState);
+                replaceUpdatedUser(response.user);
+              } catch (error) {
+                Alert.alert(
+                  'Could not update account',
                   error instanceof Error ? error.message : 'Unknown error'
                 );
               } finally {
@@ -144,7 +182,7 @@ export default function AdminScreen() {
       <View style={[styles.heroCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
         <ThemedText style={[styles.heroTitle, { color: palette.text }]}>User management</ThemedText>
         <ThemedText style={[styles.heroBody, { color: palette.muted }]}>
-          Primary admins can search users, promote admins, and remove admin access from inside the app.
+          Primary admins can search users, manage admin access, and disable user accounts from inside the app.
         </ThemedText>
       </View>
 
@@ -180,6 +218,7 @@ export default function AdminScreen() {
             const isUpdating = updatingUserId === entry.userId;
             const isPrimaryAdmin = entry.canManageAdmins;
             const effectiveAdmin = entry.effectiveRole === 'admin';
+            const isDisabled = entry.isDisabled;
 
             return (
               <View key={entry.userId} style={[styles.userCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
@@ -194,14 +233,14 @@ export default function AdminScreen() {
                   <View
                     style={[
                       styles.rolePill,
-                      { backgroundColor: effectiveAdmin ? '#FEF3C7' : palette.accentSoft },
+                      { backgroundColor: isDisabled ? '#FEE2E2' : effectiveAdmin ? '#FEF3C7' : palette.accentSoft },
                     ]}>
                     <ThemedText
                       style={[
                         styles.rolePillText,
-                        { color: effectiveAdmin ? '#92400E' : palette.accent },
+                        { color: isDisabled ? '#B91C1C' : effectiveAdmin ? '#92400E' : palette.accent },
                       ]}>
-                      {effectiveAdmin ? 'Admin' : 'User'}
+                      {isDisabled ? 'Disabled' : effectiveAdmin ? 'Admin' : 'User'}
                     </ThemedText>
                   </View>
                 </View>
@@ -210,30 +249,56 @@ export default function AdminScreen() {
                   <ThemedText style={[styles.primaryAdminHint, { color: palette.accent }]}>
                     Main admin account. This user can manage all users from inside the application.
                   </ThemedText>
+                ) : isDisabled ? (
+                  <ThemedText style={styles.disabledHint}>
+                    This account is disabled and cannot sign in until it is enabled again.
+                  </ThemedText>
                 ) : null}
 
-                <Pressable
-                  disabled={isUpdating}
-                  onPress={() => void toggleRole(entry)}
-                  style={[
-                    styles.actionButton,
-                    {
-                      backgroundColor: effectiveAdmin ? palette.background : palette.accent,
-                      borderColor: palette.border,
-                    },
-                  ]}>
-                  <ThemedText
+                <View style={styles.actionsRow}>
+                  <Pressable
+                    disabled={isUpdating}
+                    onPress={() => void toggleRole(entry)}
                     style={[
-                      styles.actionButtonText,
-                      { color: effectiveAdmin ? palette.text : palette.textOnAccent },
+                      styles.actionButton,
+                      styles.halfActionButton,
+                      {
+                        backgroundColor: effectiveAdmin ? palette.background : palette.accent,
+                        borderColor: palette.border,
+                      },
                     ]}>
-                    {isUpdating
-                      ? 'Updating...'
-                      : effectiveAdmin
-                        ? 'Remove admin access'
-                        : 'Make admin'}
-                  </ThemedText>
-                </Pressable>
+                    <ThemedText
+                      style={[
+                        styles.actionButtonText,
+                        { color: effectiveAdmin ? palette.text : palette.textOnAccent },
+                      ]}>
+                      {isUpdating
+                        ? 'Updating...'
+                        : effectiveAdmin
+                          ? 'Remove admin'
+                          : 'Make admin'}
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    disabled={isUpdating || isPrimaryAdmin}
+                    onPress={() => void toggleDisabledState(entry)}
+                    style={[
+                      styles.actionButton,
+                      styles.halfActionButton,
+                      {
+                        backgroundColor: isDisabled ? palette.accent : palette.background,
+                        borderColor: isDisabled ? palette.accent : palette.border,
+                      },
+                    ]}>
+                    <ThemedText
+                      style={[
+                        styles.actionButtonText,
+                        { color: isDisabled ? palette.textOnAccent : '#B91C1C' },
+                      ]}>
+                      {isUpdating ? 'Updating...' : isDisabled ? 'Enable account' : 'Disable account'}
+                    </ThemedText>
+                  </Pressable>
+                </View>
               </View>
             );
           })}
@@ -255,7 +320,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     borderWidth: 1,
-    marginTop: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
@@ -263,10 +327,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
   content: {
     gap: 14,
     padding: 16,
     paddingBottom: 32,
+  },
+  disabledHint: {
+    color: '#B91C1C',
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 19,
+    marginTop: 10,
   },
   emptyBody: {
     fontSize: 14,
@@ -295,6 +371,9 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 24,
     fontWeight: '900',
+  },
+  halfActionButton: {
+    flex: 1,
   },
   list: {
     gap: 12,

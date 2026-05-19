@@ -63,8 +63,15 @@ const buildAdminUserPayload = (user) => ({
   role: user.role,
   effectiveRole: resolveUserRole(user),
   canManageAdmins: canManageAdminRoles(user),
+  isDisabled: Boolean(user.isDisabled),
   joinedAt: user.createdAt
 });
+
+const assertUserIsActive = (user) => {
+  if (user?.isDisabled) {
+    throw new ApiError(403, "This account has been disabled. Please contact an administrator.");
+  }
+};
 
 const destroyCloudinaryImage = async (publicId) => {
   if (!publicId?.trim()) {
@@ -185,6 +192,7 @@ const findOrCreateUserForEmail = async (email, fallbackName) => {
   let user = await User.findOne({ email: normalizedEmail });
 
   if (user) {
+    assertUserIsActive(user);
     return user;
   }
 
@@ -246,6 +254,7 @@ const finalizeAppwriteTokenLogin = async (userId, secret) => {
       passwordHash: await hashPassword(createRandomPassword())
     });
   } else {
+    assertUserIsActive(user);
     user.appwriteUserId = remoteUser.$id;
     user.name = (remoteUser.name || user.name).trim();
     user.email = normalizedEmail;
@@ -308,6 +317,8 @@ export const loginUser = async (req, res) => {
   if (!user) {
     throw new ApiError(401, "Invalid email or password.");
   }
+
+  assertUserIsActive(user);
 
   const isValidPassword = await verifyPassword(password, user.passwordHash);
 
@@ -405,6 +416,13 @@ export const requestPasswordReset = async (req, res) => {
   const user = await User.findOne({ email: normalizedEmail });
 
   if (!user) {
+    res.json({
+      message: "If an account exists for this email, a password reset email has been sent."
+    });
+    return;
+  }
+
+  if (user.isDisabled) {
     res.json({
       message: "If an account exists for this email, a password reset email has been sent."
     });
@@ -620,7 +638,7 @@ export const listAdminUsers = async (req, res) => {
     : {};
 
   const users = await User.find(filters)
-    .select("userId name email role createdAt")
+    .select("userId name email role isDisabled createdAt")
     .sort({ createdAt: -1 })
     .limit(25)
     .lean();
@@ -647,6 +665,40 @@ export const updateUserRole = async (req, res) => {
 
   user.role = role;
   await user.save();
+
+  res.json({
+    user: buildAdminUserPayload(user)
+  });
+};
+
+export const updateUserDisabledState = async (req, res) => {
+  if (!canManageAdminRoles(req.user)) {
+    throw new ApiError(403, "Only the primary admins can manage user accounts.");
+  }
+
+  const { isDisabled } = req.body;
+
+  if (typeof isDisabled !== "boolean") {
+    throw new ApiError(400, "isDisabled must be true or false.");
+  }
+
+  const user = await User.findOne({ userId: req.params.userId.trim() });
+
+  if (!user) {
+    throw new ApiError(404, "User not found.");
+  }
+
+  if (canManageAdminRoles(user)) {
+    throw new ApiError(400, "Primary admin accounts cannot be disabled from the application.");
+  }
+
+  if (user.userId === req.user.id) {
+    throw new ApiError(400, "You cannot disable your own account.");
+  }
+
+  user.isDisabled = isDisabled;
+
+  await Promise.all([user.save(), isDisabled ? revokeUserSessions(user.userId) : Promise.resolve()]);
 
   res.json({
     user: buildAdminUserPayload(user)

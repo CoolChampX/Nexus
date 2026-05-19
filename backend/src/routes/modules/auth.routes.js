@@ -17,6 +17,7 @@ import {
   requestMagicLink,
   registerUser,
   updateUserRole,
+  updateUserDisabledState,
   updateCurrentUser
 } from "../../controllers/auth.controller.js";
 import { requireAuth } from "../../middleware/auth.js";
@@ -41,3 +42,4 @@ authRouter.get("/me", requireAuth, asyncHandler(getCurrentUser));
 authRouter.put("/me", requireAuth, asyncHandler(updateCurrentUser));
 authRouter.get("/admin/users", requireAuth, asyncHandler(listAdminUsers));
 authRouter.put("/admin/users/:userId/role", requireAuth, asyncHandler(updateUserRole));
+authRouter.put("/admin/users/:userId/disabled", requireAuth, asyncHandler(updateUserDisabledState));
