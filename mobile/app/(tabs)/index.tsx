@@ -72,9 +72,9 @@ export default function HomeScreen() {
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTab>('Newest');
   const [feedTabsWidth, setFeedTabsWidth] = useState(0);
   const [pullDistance, setPullDistance] = useState(0);
+  const [fixedHeaderHeight, setFixedHeaderHeight] = useState(0);
   const feedTabAnimation = useRef(new Animated.Value(0)).current;
   const filterPanelAnimation = useRef(new Animated.Value(0)).current;
-  const filterIconAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     enableLayoutTransitions();
@@ -233,6 +233,7 @@ export default function HomeScreen() {
   const askButtonBottom = floatingTabBarBottom + FLOATING_TAB_BAR_HEIGHT + ASK_BUTTON_GAP;
   const askButtonRight = 16;
   const listBottomPadding = askButtonBottom + 72;
+  const listTopPadding = Math.max(fixedHeaderHeight - 26, 0);
   const utilitySurface = resolvedScheme === 'dark' ? '#172033' : palette.card;
   const utilityBorder = resolvedScheme === 'dark' ? '#334155' : palette.border;
   const utilityText = resolvedScheme === 'dark' ? '#F8FAFC' : palette.text;
@@ -264,11 +265,6 @@ export default function HomeScreen() {
     inputRange: [0, 1],
     outputRange: [0.96, 1],
   });
-  const filterIconRotate = filterIconAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
-  });
-
   useEffect(() => {
     const nextIndex = FEED_TABS.indexOf(activeFeedTab);
 
@@ -287,22 +283,14 @@ export default function HomeScreen() {
   }, [refreshing]);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(filterPanelAnimation, {
-        toValue: filterMenuOpen ? 1 : 0,
-        damping: 18,
-        mass: 0.9,
-        stiffness: 170,
-        useNativeDriver: true,
-      }),
-      Animated.timing(filterIconAnimation, {
-        toValue: filterMenuOpen ? 1 : 0,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [filterIconAnimation, filterMenuOpen, filterPanelAnimation]);
+    Animated.spring(filterPanelAnimation, {
+      toValue: filterMenuOpen ? 1 : 0,
+      damping: 18,
+      mass: 0.9,
+      stiffness: 170,
+      useNativeDriver: true,
+    }).start();
+  }, [filterMenuOpen, filterPanelAnimation]);
 
   const toggleSavedFilter = async (filter: string) => {
     const nextFilters = savedFilters.includes(filter)
@@ -338,12 +326,142 @@ export default function HomeScreen() {
         refreshing={refreshing}
         topInset={insets.top}
       />
+      <View
+        onLayout={({ nativeEvent }) => {
+          const nextHeight = Math.ceil(nativeEvent.layout.height);
+          setFixedHeaderHeight((current) => (current === nextHeight ? current : nextHeight));
+        }}
+        style={[styles.fixedHeaderShell, { backgroundColor: palette.hero }]}>
+        <View style={[styles.heroContent, { paddingTop: heroTopPadding }]}>
+          <View style={styles.topBar}>
+            <NexusLogo inverted flushLeft />
+            <View style={styles.headerActions}>
+              <Pressable
+                onPress={() => {
+                  animateLayoutTransition();
+                  setFilterMenuOpen((current) => !current);
+                }}
+                style={[
+                  styles.iconOnlyButton,
+                  {
+                    backgroundColor: filterButtonSurface,
+                    borderColor: filterButtonBorder,
+                  },
+                ]}>
+                <IconSymbol name="slider.horizontal.3" size={18} color={filterButtonIcon} />
+                {appliedFilterCount > 0 ? (
+                  <View
+                    style={[
+                      styles.filterCountBadge,
+                      {
+                        backgroundColor: palette.accent,
+                        borderColor: palette.hero,
+                      },
+                    ]}>
+                    <ThemedText style={[styles.filterCountBadgeText, { color: palette.textOnAccent }]}>
+                      {appliedFilterCount}
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/profile')}
+                style={[
+                  styles.profileButton,
+                  {
+                    backgroundColor: utilitySurface,
+                    borderColor: utilityBorder,
+                  },
+                ]}>
+                {headerAvatarSource ? (
+                  <Image source={headerAvatarSource} contentFit="cover" style={styles.profileAvatar} />
+                ) : (
+                  <IconSymbol name="person.crop.circle.fill" size={19} color={utilityText} />
+                )}
+              </Pressable>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.searchShell,
+              isCompactScreen && styles.searchShellCompact,
+              {
+                backgroundColor: utilitySurface,
+                borderColor: utilityBorder,
+              },
+            ]}>
+            <IconSymbol name="magnifyingglass" size={18} color={searchIconColor} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search questions, tags, users..."
+              placeholderTextColor={searchIconColor}
+              style={[
+                styles.searchInput,
+                isCompactScreen && styles.searchInputCompact,
+                { color: palette.text },
+              ]}
+            />
+          </View>
+          {filterMenuOpen ? (
+            <Animated.View
+              style={[
+                styles.filterDrawer,
+                {
+                  backgroundColor: filterDrawerSurface,
+                  borderColor: utilityBorder,
+                  opacity: filterPanelAnimation,
+                  transform: [{ translateY: filterPanelTranslateY }, { scale: filterPanelScale }],
+                },
+              ]}>
+              <ThemedText style={[styles.filterDrawerTitle, { color: filterDrawerTitleColor }]}>
+                Your feed, tuned on purpose
+              </ThemedText>
+              <ThemedText style={[styles.filterDrawerBody, { color: palette.muted }]}>
+                Save technologies you care about and Nexus will keep the home feed tighter.
+              </ThemedText>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterDrawerList}>
+                {FILTER_OPTIONS.map((filter) => {
+                  const active = savedFilters.includes(filter);
+
+                  return (
+                    <Pressable
+                      key={filter}
+                      onPress={() => void toggleSavedFilter(filter)}
+                      style={[
+                        styles.filterPill,
+                        active
+                          ? { backgroundColor: '#FFF7ED', borderColor: '#FDBA74' }
+                          : { backgroundColor: 'transparent', borderColor: utilityBorder },
+                      ]}>
+                      <ThemedText
+                        style={[
+                          styles.filterPillText,
+                          { color: active ? '#EA580C' : filterDrawerChipText },
+                        ]}>
+                        {filter}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </Animated.View>
+          ) : null}
+        </View>
+      </View>
       <FlatList
         data={filteredQuestions}
         keyExtractor={(item) => item._id}
         style={styles.list}
         scrollEventThrottle={16}
-        contentContainerStyle={[styles.listContent, { paddingBottom: listBottomPadding }]}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: listTopPadding, paddingBottom: listBottomPadding },
+        ]}
         onScroll={({ nativeEvent }) => {
           const nextPullDistance = Math.max(0, -nativeEvent.contentOffset.y);
 
@@ -365,221 +483,94 @@ export default function HomeScreen() {
           />
         }
         ListHeaderComponent={
-          <View>
-            <View style={[styles.heroShell, { backgroundColor: palette.hero }]}>
-              <View style={[styles.heroContent, { paddingTop: heroTopPadding }]}>
-                <View style={styles.topBar}>
-                  <NexusLogo inverted flushLeft />
-                  <View style={styles.headerActions}>
-                    <Pressable
-                      onPress={() => {
-                        animateLayoutTransition();
-                        setFilterMenuOpen((current) => !current);
-                      }}
-                      style={[
-                        styles.iconOnlyButton,
-                        {
-                          backgroundColor: filterButtonSurface,
-                          borderColor: filterButtonBorder,
-                        },
-                      ]}>
-                      <Animated.View style={{ transform: [{ rotate: filterIconRotate }] }}>
-                        <IconSymbol name="slider.horizontal.3" size={18} color={filterButtonIcon} />
-                      </Animated.View>
-                      {appliedFilterCount > 0 ? (
-                        <View
-                          style={[
-                            styles.filterCountBadge,
-                            {
-                              backgroundColor: palette.accent,
-                              borderColor: palette.hero,
-                            },
-                          ]}>
-                          <ThemedText style={[styles.filterCountBadgeText, { color: palette.textOnAccent }]}>
-                            {appliedFilterCount}
-                          </ThemedText>
-                        </View>
-                      ) : null}
-                    </Pressable>
-                    <Pressable
-                      onPress={() => router.push('/profile')}
-                      style={[
-                        styles.profileButton,
-                        {
-                          backgroundColor: utilitySurface,
-                          borderColor: utilityBorder,
-                        },
-                      ]}>
-                      {headerAvatarSource ? (
-                        <Image source={headerAvatarSource} contentFit="cover" style={styles.profileAvatar} />
-                      ) : (
-                        <IconSymbol name="person.crop.circle.fill" size={19} color={utilityText} />
-                      )}
-                    </Pressable>
-                  </View>
+          <View style={[styles.feedPanel, { backgroundColor: palette.background }]}>
+            <View
+              style={[
+                styles.feedCard,
+                {
+                  backgroundColor: palette.card,
+                  borderColor: palette.border,
+                },
+              ]}>
+              <View style={styles.feedHeader}>
+                <View style={styles.feedHeaderCopy}>
+                  <ThemedText style={[styles.feedEyebrow, { color: palette.accent }]}>DISCUSSION FEED</ThemedText>
+                  <ThemedText style={[styles.feedTitle, { color: palette.text }]}>
+                    {filteredQuestions.length} results for your current view
+                  </ThemedText>
+                  <ThemedText style={[styles.feedBody, { color: palette.muted }]}>
+                    {totalAnswers} total answers across the board.
+                  </ThemedText>
                 </View>
+              </View>
 
-                <View
-                  style={[
-                    styles.searchShell,
-                    isCompactScreen && styles.searchShellCompact,
-                    {
-                      backgroundColor: utilitySurface,
-                      borderColor: utilityBorder,
-                    },
-                  ]}>
-                  <IconSymbol name="magnifyingglass" size={18} color={searchIconColor} />
-                  <TextInput
-                    value={query}
-                    onChangeText={setQuery}
-                    placeholder="Search questions, tags, users..."
-                    placeholderTextColor={searchIconColor}
+              <View
+                onLayout={({ nativeEvent }) => setFeedTabsWidth(nativeEvent.layout.width)}
+                style={[styles.feedTabs, { backgroundColor: palette.subtle }]}>
+                {feedTabSlotWidth > 0 ? (
+                  <Animated.View
+                    pointerEvents="none"
                     style={[
-                      styles.searchInput,
-                      isCompactScreen && styles.searchInputCompact,
-                      { color: palette.text },
+                      styles.feedTabSlider,
+                      {
+                        backgroundColor: palette.card,
+                        borderColor: palette.border,
+                        width: feedTabSlotWidth,
+                        transform: [
+                          {
+                            translateX: feedTabAnimation.interpolate({
+                              inputRange: [0, FEED_TABS.length - 1],
+                              outputRange: [0, feedTabSlotWidth * (FEED_TABS.length - 1)],
+                            }),
+                          },
+                        ],
+                      },
                     ]}
                   />
-                </View>
-                {filterMenuOpen ? (
-                  <Animated.View
-                    style={[
-                      styles.filterDrawer,
-                      {
-                        backgroundColor: filterDrawerSurface,
-                        borderColor: utilityBorder,
-                        opacity: filterPanelAnimation,
-                        transform: [{ translateY: filterPanelTranslateY }, { scale: filterPanelScale }],
-                      },
-                    ]}>
-                    <ThemedText style={[styles.filterDrawerTitle, { color: filterDrawerTitleColor }]}>
-                      Your feed, tuned on purpose
-                    </ThemedText>
-                    <ThemedText style={[styles.filterDrawerBody, { color: palette.muted }]}>
-                      Save technologies you care about and Nexus will keep the home feed tighter.
-                    </ThemedText>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.filterDrawerList}>
-                      {FILTER_OPTIONS.map((filter) => {
-                        const active = savedFilters.includes(filter);
-
-                        return (
-                          <Pressable
-                            key={filter}
-                            onPress={() => void toggleSavedFilter(filter)}
-                            style={[
-                              styles.filterPill,
-                              active
-                                ? { backgroundColor: '#FFF7ED', borderColor: '#FDBA74' }
-                                : { backgroundColor: 'transparent', borderColor: utilityBorder },
-                            ]}>
-                            <ThemedText
-                              style={[
-                                styles.filterPillText,
-                                { color: active ? '#EA580C' : filterDrawerChipText },
-                              ]}>
-                              {filter}
-                            </ThemedText>
-                          </Pressable>
-                        );
-                      })}
-                    </ScrollView>
-                  </Animated.View>
                 ) : null}
+                {FEED_TABS.map((item) => {
+                  const active = activeFeedTab === item;
+                  return (
+                    <Pressable
+                      key={item}
+                      onPress={() => {
+                        animateLayoutTransition();
+                        setActiveFeedTab(item);
+                      }}
+                      style={[
+                        styles.feedTab,
+                        active ? styles.feedTabActive : styles.feedTabInactive,
+                      ]}>
+                      <ThemedText
+                        style={[
+                          styles.feedTabText,
+                          { color: active ? palette.text : palette.muted },
+                        ]}>
+                        {item}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
 
-            <View style={[styles.feedPanel, { backgroundColor: palette.background }]}>
+            {error ? (
               <View
                 style={[
-                  styles.feedCard,
+                  styles.errorCard,
                   {
-                    backgroundColor: palette.card,
-                    borderColor: palette.border,
+                    backgroundColor: palette.dangerSoft,
+                    borderColor: palette.danger,
                   },
                 ]}>
-                <View style={styles.feedHeader}>
-                  <View style={styles.feedHeaderCopy}>
-                    <ThemedText style={[styles.feedEyebrow, { color: palette.accent }]}>DISCUSSION FEED</ThemedText>
-                    <ThemedText style={[styles.feedTitle, { color: palette.text }]}>
-                      {filteredQuestions.length} results for your current view
-                    </ThemedText>
-                    <ThemedText style={[styles.feedBody, { color: palette.muted }]}>
-                      {totalAnswers} total answers across the board.
-                    </ThemedText>
-                  </View>
-                </View>
-
-                <View
-                  onLayout={({ nativeEvent }) => setFeedTabsWidth(nativeEvent.layout.width)}
-                  style={[styles.feedTabs, { backgroundColor: palette.subtle }]}>
-                  {feedTabSlotWidth > 0 ? (
-                    <Animated.View
-                      pointerEvents="none"
-                      style={[
-                        styles.feedTabSlider,
-                        {
-                          backgroundColor: palette.card,
-                          borderColor: palette.border,
-                          width: feedTabSlotWidth,
-                          transform: [
-                            {
-                              translateX: feedTabAnimation.interpolate({
-                                inputRange: [0, FEED_TABS.length - 1],
-                                outputRange: [0, feedTabSlotWidth * (FEED_TABS.length - 1)],
-                              }),
-                            },
-                          ],
-                        },
-                      ]}
-                    />
-                  ) : null}
-                  {FEED_TABS.map((item) => {
-                    const active = activeFeedTab === item;
-                    return (
-                      <Pressable
-                        key={item}
-                        onPress={() => {
-                          animateLayoutTransition();
-                          setActiveFeedTab(item);
-                        }}
-                        style={[
-                          styles.feedTab,
-                          active ? styles.feedTabActive : styles.feedTabInactive,
-                        ]}>
-                        <ThemedText
-                          style={[
-                            styles.feedTabText,
-                            { color: active ? palette.text : palette.muted },
-                          ]}>
-                          {item}
-                        </ThemedText>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                <ThemedText style={[styles.errorTitle, { color: palette.danger }]}>
+                  Could not reach the backend
+                </ThemedText>
+                <ThemedText style={[styles.errorBody, { color: palette.danger }]}>
+                  {error}
+                </ThemedText>
               </View>
-
-              {error ? (
-                <View
-                  style={[
-                    styles.errorCard,
-                    {
-                      backgroundColor: palette.dangerSoft,
-                      borderColor: palette.danger,
-                    },
-                  ]}>
-                  <ThemedText style={[styles.errorTitle, { color: palette.danger }]}>
-                    Could not reach the backend
-                  </ThemedText>
-                  <ThemedText style={[styles.errorBody, { color: palette.danger }]}>
-                    {error}
-                  </ThemedText>
-                </View>
-              ) : null}
-            </View>
+            ) : null}
           </View>
         }
         renderItem={({ item, index }) => (
@@ -676,6 +667,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     marginBottom: 4,
+  },
+  fixedHeaderShell: {
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    left: 0,
+    paddingBottom: 44,
+    paddingRight: 16,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 2,
   },
   feedBody: {
     fontSize: 13,
@@ -790,12 +792,7 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     gap: 18,
-  },
-  heroShell: {
-    overflow: 'hidden',
-    paddingBottom: 44,
     paddingLeft: 0,
-    paddingRight: 16,
   },
   headerActions: {
     alignItems: 'center',
