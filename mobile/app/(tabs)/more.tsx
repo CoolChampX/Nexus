@@ -39,6 +39,7 @@ export default function MoreScreen() {
   const [fixedTopBarHeight, setFixedTopBarHeight] = useState(0);
   const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
   const topBarPadding = Math.max(insets.top + 18, 34);
+  const contentBottomPadding = Math.max(insets.bottom, 10) + 124;
 
   const handlePasswordReset = async () => {
     if (!user?.email?.trim()) {
@@ -94,7 +95,10 @@ export default function MoreScreen() {
       </View>
       <ScrollView
         style={styles.screen}
-        contentContainerStyle={[styles.content, { paddingTop: fixedTopBarHeight + 12 }]}>
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: fixedTopBarHeight + 12, paddingBottom: contentBottomPadding },
+        ]}>
         <View style={[styles.heroSection, { backgroundColor: palette.hero }]}>
           <View style={styles.identityRow}>
             <ThemedText
