@@ -268,7 +268,7 @@ export default function HomeScreen() {
   });
   const filterIconRotate = filterIconAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
+    outputRange: ['-90deg', '90deg'],
   });
   useEffect(() => {
     const nextIndex = FEED_TABS.indexOf(activeFeedTab);

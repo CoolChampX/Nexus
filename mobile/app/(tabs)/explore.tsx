@@ -79,6 +79,7 @@ export default function QuestionsScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const questionCodeRef = useRef<TextInput>(null);
   const aiCodeRef = useRef<TextInput>(null);
+  const [fixedTopBarHeight, setFixedTopBarHeight] = useState(0);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [codeSnippet, setCodeSnippet] = useState('');
@@ -102,6 +103,7 @@ export default function QuestionsScreen() {
     end: 0,
   });
   const headerTopPadding = Math.max(insets.top + 18, 34);
+  const contentTopPadding = fixedTopBarHeight + 12;
   const toolbarBottom = Platform.OS === 'android' ? 0 : Math.max(keyboardHeight - insets.bottom, 0);
 
   useEffect(() => {
@@ -263,6 +265,16 @@ export default function QuestionsScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}>
       <View style={[styles.screen, { backgroundColor: palette.background }]}>
+        <View
+          onLayout={({ nativeEvent }) => {
+            const nextHeight = Math.ceil(nativeEvent.layout.height);
+            setFixedTopBarHeight((current) => (current === nextHeight ? current : nextHeight));
+          }}
+          style={[styles.fixedTopBarShell, { backgroundColor: palette.hero }]}>
+          <View style={[styles.topBarContent, { paddingTop: headerTopPadding }]}>
+            <NexusLogo inverted flushLeft />
+          </View>
+        </View>
         <ScrollView
           ref={scrollRef}
           onScroll={handleScroll}
@@ -272,7 +284,7 @@ export default function QuestionsScreen() {
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: 0,
+              paddingTop: contentTopPadding,
               paddingBottom:
                 96 +
                 (keyboardHeight > 0 && activeCodeField !== null
@@ -280,10 +292,6 @@ export default function QuestionsScreen() {
                   : 0),
             },
           ]}>
-          <View style={[styles.headerCard, { backgroundColor: palette.hero, paddingTop: headerTopPadding }]}>
-            <NexusLogo inverted flushLeft />
-          </View>
-
           <View style={[styles.panel, { backgroundColor: palette.card, borderColor: palette.border }]}>
             <ThemedText style={[styles.panelTitle, { color: palette.text }]}>Ask a question</ThemedText>
             <TextInput
@@ -574,16 +582,14 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 96,
   },
-  headerCard: {
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 24,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 24,
-    marginLeft: -16,
-    paddingBottom: 18,
-    paddingLeft: 0,
-    paddingRight: 18,
-    paddingTop: 18,
+  fixedTopBarShell: {
+    left: 0,
+    paddingBottom: 14,
+    paddingRight: 16,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 2,
   },
   headerActions: {
     flexDirection: 'row',
@@ -732,5 +738,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  topBarContent: {
+    paddingLeft: 0,
   },
 });

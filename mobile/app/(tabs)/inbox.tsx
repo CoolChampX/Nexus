@@ -47,6 +47,8 @@ export default function InboxScreen() {
     markAllNotificationsRead,
   } = useNotifications();
   const [refreshing, setRefreshing] = useState(false);
+  const [fixedTopBarHeight, setFixedTopBarHeight] = useState(0);
+  const topBarPadding = Math.max(insets.top + 18, 34);
 
   useEffect(() => {
     enableLayoutTransitions();
@@ -81,33 +83,43 @@ export default function InboxScreen() {
   };
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: palette.background }]}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} />}>
-      <View style={[styles.heroCard, { backgroundColor: palette.hero, paddingTop: Math.max(insets.top + 18, 34) }]}>
-        <View style={styles.heroHeader}>
-          <NexusLogo inverted flushLeft />
+    <View style={[styles.screen, { backgroundColor: palette.background }]}>
+      <View
+        onLayout={({ nativeEvent }) => {
+          const nextHeight = Math.ceil(nativeEvent.layout.height);
+          setFixedTopBarHeight((current) => (current === nextHeight ? current : nextHeight));
+        }}
+        style={[styles.fixedTopBarShell, { backgroundColor: palette.hero }]}>
+        <View style={[styles.topBarContent, { paddingTop: topBarPadding }]}>
+          <View style={styles.heroHeader}>
+            <NexusLogo inverted flushLeft />
+            {unreadCount > 0 ? (
+              <Pressable
+                onPress={() => {
+                  animateLayoutTransition();
+                  void markAllNotificationsRead();
+                }}
+                style={[styles.markAllButton, { borderColor: palette.border, backgroundColor: palette.card }]}>
+                <ThemedText style={[styles.markAllText, { color: palette.text }]}>Mark all read</ThemedText>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      </View>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.content, { paddingTop: fixedTopBarHeight + 12 }]}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} />}>
+        <View style={[styles.heroSection, { backgroundColor: palette.hero }]}>
           {unreadCount > 0 ? (
-            <Pressable
-              onPress={() => {
-                animateLayoutTransition();
-                void markAllNotificationsRead();
-              }}
-              style={[styles.markAllButton, { borderColor: palette.border, backgroundColor: palette.card }]}>
-              <ThemedText style={[styles.markAllText, { color: palette.text }]}>Mark all read</ThemedText>
-            </Pressable>
+            <ThemedText style={[styles.heroBody, { color: palette.muted }]}>
+              {unreadCount} unread update{unreadCount === 1 ? '' : 's'} waiting for you.
+            </ThemedText>
           ) : null}
         </View>
-        {unreadCount > 0 ? (
-          <ThemedText style={[styles.heroBody, { color: palette.muted }]}>
-            {unreadCount} unread update{unreadCount === 1 ? '' : 's'} waiting for you.
-          </ThemedText>
-        ) : null}
-      </View>
 
-      {notifications.length ? (
-        notifications.map((item) => {
+        {notifications.length ? (
+          notifications.map((item) => {
           const unread = !item.readAt;
           const actorName = item.actor?.name?.trim() || item.actor?.email?.trim() || 'Community member';
           const actorInitials = actorName
@@ -118,61 +130,62 @@ export default function InboxScreen() {
             .toUpperCase();
           const actorAvatarSource = item.actor?.avatarImageUrl?.trim() || undefined;
 
-          return (
-            <Pressable
-              key={item._id}
-              onPress={() => void openNotification(item._id, item.questionId)}
-              style={[
-                styles.itemCard,
-                {
-                  backgroundColor: unread ? palette.card : palette.background,
-                  borderColor: unread ? palette.accentSoft : palette.border,
-                },
-              ]}>
-              <View style={styles.itemHeader}>
-                <View style={styles.identityRow}>
-                  <View
-                    style={[
-                      styles.avatarShell,
-                      { backgroundColor: item.actor?.avatarColor || palette.accent },
-                    ]}>
-                    {actorAvatarSource ? (
-                      <Image source={actorAvatarSource} contentFit="cover" style={styles.avatarImage} />
-                    ) : (
-                      <ThemedText style={styles.avatarText}>{actorInitials}</ThemedText>
-                    )}
+            return (
+              <Pressable
+                key={item._id}
+                onPress={() => void openNotification(item._id, item.questionId)}
+                style={[
+                  styles.itemCard,
+                  {
+                    backgroundColor: unread ? palette.card : palette.background,
+                    borderColor: unread ? palette.accentSoft : palette.border,
+                  },
+                ]}>
+                <View style={styles.itemHeader}>
+                  <View style={styles.identityRow}>
+                    <View
+                      style={[
+                        styles.avatarShell,
+                        { backgroundColor: item.actor?.avatarColor || palette.accent },
+                      ]}>
+                      {actorAvatarSource ? (
+                        <Image source={actorAvatarSource} contentFit="cover" style={styles.avatarImage} />
+                      ) : (
+                        <ThemedText style={styles.avatarText}>{actorInitials}</ThemedText>
+                      )}
+                    </View>
+                    <View style={styles.itemCopy}>
+                      <ThemedText style={[styles.itemTitle, { color: palette.text }]}>{item.title}</ThemedText>
+                      <ThemedText style={[styles.itemMeta, { color: palette.muted }]}>
+                        {actorName} | {formatRelativeTime(item.createdAt)}
+                      </ThemedText>
+                    </View>
                   </View>
-                  <View style={styles.itemCopy}>
-                    <ThemedText style={[styles.itemTitle, { color: palette.text }]}>{item.title}</ThemedText>
-                    <ThemedText style={[styles.itemMeta, { color: palette.muted }]}>
-                      {actorName} | {formatRelativeTime(item.createdAt)}
+                  {unread ? <View style={[styles.unreadDot, { backgroundColor: palette.accent }]} /> : null}
+                </View>
+
+                <ThemedText style={[styles.itemBody, { color: palette.text }]}>{item.body}</ThemedText>
+                {item.questionTitle ? (
+                  <View style={[styles.threadPill, { backgroundColor: palette.accentSoft }]}>
+                    <MaterialIcons name="forum" size={14} color={palette.accent} />
+                    <ThemedText style={[styles.threadPillText, { color: palette.accent }]}>
+                      {item.questionTitle}
                     </ThemedText>
                   </View>
-                </View>
-                {unread ? <View style={[styles.unreadDot, { backgroundColor: palette.accent }]} /> : null}
-              </View>
-
-              <ThemedText style={[styles.itemBody, { color: palette.text }]}>{item.body}</ThemedText>
-              {item.questionTitle ? (
-                <View style={[styles.threadPill, { backgroundColor: palette.accentSoft }]}>
-                  <MaterialIcons name="forum" size={14} color={palette.accent} />
-                  <ThemedText style={[styles.threadPillText, { color: palette.accent }]}>
-                    {item.questionTitle}
-                  </ThemedText>
-                </View>
-              ) : null}
-            </Pressable>
-          );
-        })
-      ) : (
-        <View style={[styles.emptyCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
-          <ThemedText style={[styles.emptyTitle, { color: palette.text }]}>No notifications yet</ThemedText>
-          <ThemedText style={[styles.emptyBody, { color: palette.muted }]}>
-            When someone answers your question, comments on your post, or mentions you, it will show up here.
-          </ThemedText>
-        </View>
-      )}
-    </ScrollView>
+                ) : null}
+              </Pressable>
+            );
+          })
+        ) : (
+          <View style={[styles.emptyCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
+            <ThemedText style={[styles.emptyTitle, { color: palette.text }]}>No notifications yet</ThemedText>
+            <ThemedText style={[styles.emptyBody, { color: palette.muted }]}>
+              When someone answers your question, comments on your post, or mentions you, it will show up here.
+            </ThemedText>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -214,21 +227,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
   },
+  fixedTopBarShell: {
+    left: 0,
+    paddingBottom: 14,
+    paddingRight: 16,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 2,
+  },
   heroBody: {
     fontSize: 14,
     lineHeight: 21,
   },
-  heroCard: {
-    borderBottomLeftRadius: 0,
+  heroSection: {
+    borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 24,
     gap: 10,
-    marginLeft: -16,
+    marginBottom: 4,
     paddingBottom: 18,
     paddingLeft: 0,
     paddingRight: 18,
-    paddingTop: 18,
+    paddingTop: 12,
   },
   heroHeader: {
     alignItems: 'center',
@@ -284,6 +304,9 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
+  },
+  topBarContent: {
+    paddingLeft: 0,
   },
   threadPill: {
     alignItems: 'center',

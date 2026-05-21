@@ -42,8 +42,6 @@ export default function EditProfileScreen() {
   const [bannerImagePublicId, setBannerImagePublicId] = useState('');
   const [pendingAvatarAsset, setPendingAvatarAsset] = useState<PendingImageAsset>(null);
   const [pendingBannerAsset, setPendingBannerAsset] = useState<PendingImageAsset>(null);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const entrance = useRef(new Animated.Value(0)).current;
   const closingRef = useRef(false);
 
@@ -198,16 +196,6 @@ export default function EditProfileScreen() {
   const saveProfile = async () => {
     try {
       setSaving(true);
-      if (newPassword.trim() || confirmPassword.trim()) {
-        if (newPassword.trim().length < 8) {
-          throw new Error('Use at least 8 characters for your new password.');
-        }
-
-        if (newPassword !== confirmPassword) {
-          throw new Error('Your new password and confirmation do not match.');
-        }
-      }
-
       const [nextAvatarUpload, nextBannerUpload] = await Promise.all([
         pendingAvatarAsset
           ? uploadImageToCloudinary(pendingAvatarAsset, 'avatar')
@@ -242,12 +230,6 @@ export default function EditProfileScreen() {
       setPendingBannerAsset(null);
 
       await refreshProfile(updatedProfile);
-
-      if (newPassword.trim()) {
-        await forumApi.changeCurrentUserPassword({
-          password: newPassword,
-        });
-      }
 
       closeScreen();
     } catch (error) {
@@ -422,26 +404,6 @@ export default function EditProfileScreen() {
             value={location}
             onChangeText={setLocation}
             placeholder="Location"
-            placeholderTextColor={palette.muted}
-            style={[styles.input, { backgroundColor: palette.card, borderColor: cardBorder, color: palette.text }]}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <ThemedText style={[styles.label, { color: palette.muted }]}>Set New Password</ThemedText>
-          <TextInput
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-            placeholder="new password"
-            placeholderTextColor={palette.muted}
-            style={[styles.input, { backgroundColor: palette.card, borderColor: cardBorder, color: palette.text }]}
-          />
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            placeholder="confirm new password"
             placeholderTextColor={palette.muted}
             style={[styles.input, { backgroundColor: palette.card, borderColor: cardBorder, color: palette.text }]}
           />
