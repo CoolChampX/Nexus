@@ -1,0 +1,1434 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 13 /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2072 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(PROJECT TECH GUIDE) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(PURPOSE) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This project is a mobile developer Q&A app called Nexus. It lets users sign up, ask coding) Tj
+0 -14 Td
+(questions, post answers, comment, vote, manage profiles, receive notifications, and use an) Tj
+0 -14 Td
+(AI code explainer.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This guide is meant to help you answer questions like:) Tj
+0 -14 Td
+(- What tech stack is being used?) Tj
+0 -14 Td
+(- How does the app work end to end?) Tj
+0 -14 Td
+(- Which file controls a specific screen or button?) Tj
+0 -14 Td
+(- Where should I look if I need to change a feature?) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(HIGH-LEVEL ARCHITECTURE) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The codebase has 2 main parts:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. mobile) Tj
+0 -14 Td
+(- Expo + React Native app) Tj
+0 -14 Td
+(- Handles UI, navigation, forms, local session storage, notifications state, theme state) Tj
+0 -14 Td
+(- Calls the backend through fetch wrappers in mobile/lib/forum-api.ts) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(2. backend) Tj
+0 -14 Td
+(- Node.js + Express API) Tj
+0 -14 Td
+(- Uses MongoDB with Mongoose for app data) Tj
+0 -14 Td
+(- Uses Appwrite for auth-related flows like OAuth, magic links, password reset) Tj
+0 -14 Td
+(- Uses AI providers for code explanation) Tj
+0 -14 Td
+(- Stores business logic in controllers, models, services, and middleware) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(TECH STACK) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MOBILE STACK) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- React Native) Tj
+0 -14 Td
+(- Expo) Tj
+0 -14 Td
+(- Expo Router for file-based routing) Tj
+0 -14 Td
+(- TypeScript) Tj
+0 -14 Td
+(- AsyncStorage for persisted auth/theme state) Tj
+0 -14 Td
+(- Expo Image for remote/local images) Tj
+0 -14 Td
+(- Expo Image Picker for profile/banner uploads) Tj
+0 -14 Td
+(- React Navigation under Expo Router) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Main config and entry files:) Tj
+0 -14 Td
+(- mobile/package.json) Tj
+0 -14 Td
+(- mobile/app/_layout.tsx) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/_layout.tsx) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1521 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(- mobile/lib/auth.tsx) Tj
+0 -14 Td
+(- mobile/lib/forum-api.ts) Tj
+0 -14 Td
+(- mobile/lib/appearance.tsx) Tj
+0 -14 Td
+(- mobile/lib/notifications.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND STACK) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Node.js) Tj
+0 -14 Td
+(- Express) Tj
+0 -14 Td
+(- Mongoose) Tj
+0 -14 Td
+(- MongoDB) Tj
+0 -14 Td
+(- node-appwrite) Tj
+0 -14 Td
+(- OpenAI / Groq / Gemini fallback support) Tj
+0 -14 Td
+(- dotenv) Tj
+0 -14 Td
+(- morgan) Tj
+0 -14 Td
+(- cors) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Main backend entry files:) Tj
+0 -14 Td
+(- backend/server.js) Tj
+0 -14 Td
+(- backend/src/routes/index.js) Tj
+0 -14 Td
+(- backend/src/config/db.js) Tj
+0 -14 Td
+(- backend/src/config/env.js) Tj
+0 -14 Td
+(- backend/src/config/appwrite.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(DATA AND EXTERNAL SERVICES) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MONGODB) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Used for app data such as:) Tj
+0 -14 Td
+(- users) Tj
+0 -14 Td
+(- questions) Tj
+0 -14 Td
+(- answers) Tj
+0 -14 Td
+(- comments) Tj
+0 -14 Td
+(- votes) Tj
+0 -14 Td
+(- notifications) Tj
+0 -14 Td
+(- sessions) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Main model files:) Tj
+0 -14 Td
+(- backend/src/models/User.js) Tj
+0 -14 Td
+(- backend/src/models/Question.js) Tj
+0 -14 Td
+(- backend/src/models/Answer.js) Tj
+0 -14 Td
+(- backend/src/models/Comment.js) Tj
+0 -14 Td
+(- backend/src/models/Vote.js) Tj
+0 -14 Td
+(- backend/src/models/Notification.js) Tj
+0 -14 Td
+(- backend/src/models/AuthSession.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(APPWRITE) Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1732 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(Used for:) Tj
+0 -14 Td
+(- OAuth login) Tj
+0 -14 Td
+(- magic link login) Tj
+0 -14 Td
+(- password reset / recovery) Tj
+0 -14 Td
+(- remote user account coordination) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Main files:) Tj
+0 -14 Td
+(- backend/src/config/appwrite.js) Tj
+0 -14 Td
+(- backend/src/controllers/auth.controller.js) Tj
+0 -14 Td
+(- mobile/app/auth.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(CLOUDINARY) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Used for profile avatar and banner image uploads from the mobile app.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Main file:) Tj
+0 -14 Td
+(- mobile/app/edit-profile.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Backend cleanup of replaced Cloudinary assets happens in:) Tj
+0 -14 Td
+(- backend/src/controllers/auth.controller.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(AI PROVIDERS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Used for the code explainer feature.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Main files:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/explore.tsx) Tj
+0 -14 Td
+(- backend/src/controllers/ai.controller.js) Tj
+0 -14 Td
+(- backend/src/services/ai.service.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Provider order:) Tj
+0 -14 Td
+(1. Groq if configured) Tj
+0 -14 Td
+(2. OpenAI if configured) Tj
+0 -14 Td
+(3. Gemini if configured) Tj
+0 -14 Td
+(4. Fallback structured response if no provider is available) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(FRONTEND ROUTING MAP) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Expo Router uses the file structure inside mobile/app.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MAIN APP SHELL) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- mobile/app/_layout.tsx) Tj
+0 -14 Td
+(This wraps the app in:) Tj
+0 -14 Td
+(- AppearanceProvider) Tj
+0 -14 Td
+(- AuthProvider) Tj
+0 -14 Td
+(- NotificationsProvider) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(It also defines the main stack routes like:) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 1857 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(- auth) Tj
+0 -14 Td
+(- reset-password) Tj
+0 -14 Td
+(- \(tabs\)) Tj
+0 -14 Td
+(- profile) Tj
+0 -14 Td
+(- questions/[questionId]) Tj
+0 -14 Td
+(- edit-profile) Tj
+0 -14 Td
+(- ai-history) Tj
+0 -14 Td
+(- admin) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BOTTOM TAB AREA) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/_layout.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important tab screens:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/index.tsx -> Home feed) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/explore.tsx -> Ask question + AI explain) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/inbox.tsx -> Notifications) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/more.tsx -> Settings / quick links / sign out) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(OTHER SCREENS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- mobile/app/auth.tsx -> Login, register, OAuth, magic link, forgot password) Tj
+0 -14 Td
+(- mobile/app/profile.tsx -> User profile, recent questions, recent answers) Tj
+0 -14 Td
+(- mobile/app/edit-profile.tsx -> Edit profile, upload avatar/banner, change password) Tj
+0 -14 Td
+(- mobile/app/admin.tsx -> User/admin management) Tj
+0 -14 Td
+(- mobile/app/questions/[questionId].tsx -> Question detail thread, answers, comments, voting) Tj
+0 -14 Td
+(- mobile/app/ai-history.tsx -> AI explanation history) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND STRUCTURE) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(ENTRY POINT) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- backend/server.js) Tj
+0 -14 Td
+(What it does:) Tj
+0 -14 Td
+(- loads Express) Tj
+0 -14 Td
+(- enables CORS) Tj
+0 -14 Td
+(- parses JSON) Tj
+0 -14 Td
+(- adds logging) Tj
+0 -14 Td
+(- mounts /api routes) Tj
+0 -14 Td
+(- starts the server after MongoDB connection) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(ROUTE REGISTRATION) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- backend/src/routes/index.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Mounted modules:) Tj
+0 -14 Td
+(- /api/auth) Tj
+0 -14 Td
+(- /api/questions) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1921 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(- /api/comments) Tj
+0 -14 Td
+(- /api/notifications) Tj
+0 -14 Td
+(- /api/votes) Tj
+0 -14 Td
+(- /api/ai) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(CONTROLLERS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- backend/src/controllers/auth.controller.js) Tj
+0 -14 Td
+(- backend/src/controllers/questions.controller.js) Tj
+0 -14 Td
+(- backend/src/controllers/answers.controller.js) Tj
+0 -14 Td
+(- backend/src/controllers/comments.controller.js) Tj
+0 -14 Td
+(- backend/src/controllers/votes.controller.js) Tj
+0 -14 Td
+(- backend/src/controllers/notifications.controller.js) Tj
+0 -14 Td
+(- backend/src/controllers/ai.controller.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(SERVICES) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- backend/src/services/ai.service.js) Tj
+0 -14 Td
+(- backend/src/services/notification.service.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MIDDLEWARE) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- backend/src/middleware/auth.js) Tj
+0 -14 Td
+(- backend/src/middleware/errorHandler.js) Tj
+0 -14 Td
+(- backend/src/middleware/notFound.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(HOW THE APP WORKS END TO END) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(AUTH FLOW) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Frontend:) Tj
+0 -14 Td
+(- mobile/app/auth.tsx shows login/register UI) Tj
+0 -14 Td
+(- mobile/lib/auth.tsx stores session in AsyncStorage) Tj
+0 -14 Td
+(- mobile/lib/forum-api.ts sends auth API calls) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Backend:) Tj
+0 -14 Td
+(- backend/src/controllers/auth.controller.js handles register, login, OAuth completion,) Tj
+0 -14 Td
+(magic link completion, current profile, admin management, logout, password reset, profile) Tj
+0 -14 Td
+(update) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important behavior:) Tj
+0 -14 Td
+(- local mobile session is stored in AsyncStorage) Tj
+0 -14 Td
+(- API token is sent in Authorization header) Tj
+0 -14 Td
+(- app refreshes session on app foreground) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(QUESTION FLOW) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Create question:) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 2271 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(- UI screen: mobile/app/\(tabs\)/explore.tsx) Tj
+0 -14 Td
+(- API function: forumApi.createQuestion\(...\)) Tj
+0 -14 Td
+(- backend controller: backend/src/controllers/questions.controller.js -> createQuestion) Tj
+0 -14 Td
+(- data saved in MongoDB Question model) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(List questions:) Tj
+0 -14 Td
+(- UI screen: mobile/app/\(tabs\)/index.tsx) Tj
+0 -14 Td
+(- API function: forumApi.listQuestions\(\)) Tj
+0 -14 Td
+(- backend controller: questions.controller.js -> listQuestions) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Open one question:) Tj
+0 -14 Td
+(- UI screen: mobile/app/questions/[questionId].tsx) Tj
+0 -14 Td
+(- API function: forumApi.getQuestion\(questionId\)) Tj
+0 -14 Td
+(- backend controller: questions.controller.js -> getQuestionById) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(ANSWER FLOW) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Post answer:) Tj
+0 -14 Td
+(- UI screen: mobile/app/questions/[questionId].tsx) Tj
+0 -14 Td
+(- API function: forumApi.createAnswer\(questionId, payload\)) Tj
+0 -14 Td
+(- backend controller: backend/src/controllers/answers.controller.js -> createAnswer) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(List answers:) Tj
+0 -14 Td
+(- same question thread screen) Tj
+0 -14 Td
+(- backend controller: answers.controller.js -> listAnswers) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(COMMENT FLOW) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Post comment on answer:) Tj
+0 -14 Td
+(- UI screen: mobile/app/questions/[questionId].tsx) Tj
+0 -14 Td
+(- API function: forumApi.createComment\('answer', targetId, { body }\)) Tj
+0 -14 Td
+(- backend controller: backend/src/controllers/comments.controller.js -> createComment) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(VOTE FLOW) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Vote on question or answer:) Tj
+0 -14 Td
+(- UI screens:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/index.tsx) Tj
+0 -14 Td
+(- mobile/app/questions/[questionId].tsx) Tj
+0 -14 Td
+(- API function: forumApi.castVote\(targetType, targetId, value\)) Tj
+0 -14 Td
+(- backend controller: backend/src/controllers/votes.controller.js -> castVote) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(NOTIFICATION FLOW) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Frontend:) Tj
+0 -14 Td
+(- mobile/lib/notifications.tsx polls every 30 seconds) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/inbox.tsx shows notifications) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Backend:) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 1743 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(- backend/src/controllers/notifications.controller.js) Tj
+0 -14 Td
+(- backend/src/services/notification.service.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Notifications are created when:) Tj
+0 -14 Td
+(- answers are added) Tj
+0 -14 Td
+(- comments are added) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(AI EXPLAIN FLOW) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Frontend:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/explore.tsx) Tj
+0 -14 Td
+(- user pastes code and taps Explain snippet) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(API wrapper:) Tj
+0 -14 Td
+(- mobile/lib/forum-api.ts -> explainCode\(...\)) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Backend:) Tj
+0 -14 Td
+(- backend/src/controllers/ai.controller.js) Tj
+0 -14 Td
+(- backend/src/services/ai.service.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The backend:) Tj
+0 -14 Td
+(- detects language) Tj
+0 -14 Td
+(- chooses explanation mode) Tj
+0 -14 Td
+(- tries Groq or OpenAI or Gemini) Tj
+0 -14 Td
+(- returns structured explanation JSON) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(WHERE IMPORTANT BUTTONS ARE CODED) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(HOME FEED) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/index.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons there:) Tj
+0 -14 Td
+(- Ask Question button) Tj
+0 -14 Td
+(- navigates to /\(tabs\)/explore) Tj
+0 -14 Td
+(- Profile icon button) Tj
+0 -14 Td
+(- navigates to /profile) Tj
+0 -14 Td
+(- Filter button) Tj
+0 -14 Td
+(- opens saved technology filters) Tj
+0 -14 Td
+(- Feed tab buttons) Tj
+0 -14 Td
+(- switch between Newest, Active, Unanswered) Tj
+0 -14 Td
+(- Question card press) Tj
+0 -14 Td
+(- opens /questions/[questionId]) Tj
+0 -14 Td
+(- Vote buttons on question cards) Tj
+0 -14 Td
+(- call forumApi.castVote\('question', ...\)) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(AUTH SCREEN) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 18 0 R >>
+endobj
+18 0 obj
+<< /Length 1625 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/auth.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+0 -14 Td
+(- Log in / Create account) Tj
+0 -14 Td
+(- GitHub sign-in) Tj
+0 -14 Td
+(- Google sign-in) Tj
+0 -14 Td
+(- Email me a sign-in link) Tj
+0 -14 Td
+(- Forgot password?) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(These connect to:) Tj
+0 -14 Td
+(- forumApi.login) Tj
+0 -14 Td
+(- forumApi.register) Tj
+0 -14 Td
+(- forumApi.requestMagicLink) Tj
+0 -14 Td
+(- forumApi.requestPasswordReset) Tj
+0 -14 Td
+(- OAuth redirect helpers and Appwrite callback handling) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(ASK QUESTION + AI EXPLAIN SCREEN) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/explore.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+0 -14 Td
+(- Publish) Tj
+0 -14 Td
+(- creates a new question) Tj
+0 -14 Td
+(- Explain snippet) Tj
+0 -14 Td
+(- calls AI explain API) Tj
+0 -14 Td
+(- History button) Tj
+0 -14 Td
+(- opens AI history) Tj
+0 -14 Td
+(- Clear button) Tj
+0 -14 Td
+(- clears explanation result) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(QUESTION THREAD SCREEN) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/questions/[questionId].tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+0 -14 Td
+(- Vote up/down on question) Tj
+0 -14 Td
+(- Post answer) Tj
+0 -14 Td
+(- Vote up/down on each answer) Tj
+0 -14 Td
+(- Reply button on answer comment box) Tj
+0 -14 Td
+(- Delete question) Tj
+0 -14 Td
+(- Delete answer) Tj
+0 -14 Td
+(- Delete comment) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This is one of the most important files if someone asks:) Tj
+0 -14 Td
+(- where answer posting happens) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 20 0 R >>
+endobj
+20 0 obj
+<< /Length 1395 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(- where comments happen) Tj
+0 -14 Td
+(- where vote logic is triggered) Tj
+0 -14 Td
+(- where the question detail UI is built) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(PROFILE SCREEN) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/profile.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+0 -14 Td
+(- Edit profile) Tj
+0 -14 Td
+(- Manage users and admins) Tj
+0 -14 Td
+(- Delete question) Tj
+0 -14 Td
+(- Delete answer) Tj
+0 -14 Td
+(- Logout icon) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(EDIT PROFILE SCREEN) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/edit-profile.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+0 -14 Td
+(- Change cover photo) Tj
+0 -14 Td
+(- Change profile picture) Tj
+0 -14 Td
+(- Remove image) Tj
+0 -14 Td
+(- Save) Tj
+0 -14 Td
+(- Cancel) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This file handles:) Tj
+0 -14 Td
+(- image picker) Tj
+0 -14 Td
+(- Cloudinary upload) Tj
+0 -14 Td
+(- profile save) Tj
+0 -14 Td
+(- optional password change) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(INBOX SCREEN) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/inbox.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+0 -14 Td
+(- Mark all read) Tj
+0 -14 Td
+(- Open notification) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MORE SCREEN) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/\(tabs\)/more.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 22 0 R >>
+endobj
+22 0 obj
+<< /Length 1504 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(- Theme toggle area) Tj
+0 -14 Td
+(- Edit profile) Tj
+0 -14 Td
+(- Ask a question) Tj
+0 -14 Td
+(- Manage users) Tj
+0 -14 Td
+(- Sign out) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(ADMIN SCREEN) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(File:) Tj
+0 -14 Td
+(- mobile/app/admin.tsx) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Important buttons:) Tj
+0 -14 Td
+(- Search) Tj
+0 -14 Td
+(- Make admin / Remove admin) Tj
+0 -14 Td
+(- Disable account / Enable account) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MAIN SHARED FRONTEND UTILITY FILES) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MOBILE/LIB/FORUM-API.TS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This is one of the most important files in the whole app.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Why:) Tj
+0 -14 Td
+(- almost every screen uses it) Tj
+0 -14 Td
+(- it contains the API base URL detection) Tj
+0 -14 Td
+(- it adds Authorization headers) Tj
+0 -14 Td
+(- it defines all frontend-to-backend API calls) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(If someone asks:) Tj
+0 -14 Td
+("Where does the app call the backend?") Tj
+0 -14 Td
+(Start here.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MOBILE/LIB/AUTH.TSX) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Controls:) Tj
+0 -14 Td
+(- current user state) Tj
+0 -14 Td
+(- login/register/logout) Tj
+0 -14 Td
+(- session restore) Tj
+0 -14 Td
+(- session refresh) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MOBILE/LIB/NOTIFICATIONS.TSX) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Controls:) Tj
+0 -14 Td
+(- notification list state) Tj
+0 -14 Td
+(- unread count) Tj
+0 -14 Td
+(- polling) Tj
+0 -14 Td
+(- mark read / mark all read) Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 24 0 R >>
+endobj
+24 0 obj
+<< /Length 1487 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+(MOBILE/LIB/APPEARANCE.TSX) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Controls:) Tj
+0 -14 Td
+(- light/dark/system mode) Tj
+0 -14 Td
+(- palette selection) Tj
+0 -14 Td
+(- persisted theme mode) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(MAIN BACKEND FILES TO REMEMBER) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND/SRC/CONTROLLERS/AUTH.CONTROLLER.JS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use this file for:) Tj
+0 -14 Td
+(- login) Tj
+0 -14 Td
+(- register) Tj
+0 -14 Td
+(- magic link) Tj
+0 -14 Td
+(- OAuth) Tj
+0 -14 Td
+(- password reset) Tj
+0 -14 Td
+(- profile update) Tj
+0 -14 Td
+(- admin role update) Tj
+0 -14 Td
+(- disable user) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND/SRC/CONTROLLERS/QUESTIONS.CONTROLLER.JS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use this file for:) Tj
+0 -14 Td
+(- list questions) Tj
+0 -14 Td
+(- create question) Tj
+0 -14 Td
+(- get question) Tj
+0 -14 Td
+(- delete question) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND/SRC/CONTROLLERS/ANSWERS.CONTROLLER.JS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use this file for:) Tj
+0 -14 Td
+(- list answers) Tj
+0 -14 Td
+(- create answer) Tj
+0 -14 Td
+(- delete answer) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND/SRC/CONTROLLERS/COMMENTS.CONTROLLER.JS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use this file for:) Tj
+0 -14 Td
+(- list comments) Tj
+0 -14 Td
+(- create comment) Tj
+0 -14 Td
+(- delete comment) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND/SRC/CONTROLLERS/VOTES.CONTROLLER.JS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use this file for:) Tj
+0 -14 Td
+(- question votes) Tj
+0 -14 Td
+(- answer votes) Tj
+ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 26 0 R >>
+endobj
+26 0 obj
+<< /Length 2451 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+() Tj
+0 -14 Td
+(BACKEND/SRC/CONTROLLERS/NOTIFICATIONS.CONTROLLER.JS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use this file for:) Tj
+0 -14 Td
+(- get notifications) Tj
+0 -14 Td
+(- unread count) Tj
+0 -14 Td
+(- mark read) Tj
+0 -14 Td
+(- mark all read) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BACKEND/SRC/SERVICES/AI.SERVICE.JS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use this file for:) Tj
+0 -14 Td
+(- AI prompt construction) Tj
+0 -14 Td
+(- provider selection) Tj
+0 -14 Td
+(- response parsing) Tj
+0 -14 Td
+(- fallback behavior) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(QUICK "WHERE DO I EDIT..." CHEATSHEET) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(If you want to change:) Tj
+0 -14 Td
+(- login screen UI -> mobile/app/auth.tsx) Tj
+0 -14 Td
+(- home feed UI -> mobile/app/\(tabs\)/index.tsx) Tj
+0 -14 Td
+(- ask question form -> mobile/app/\(tabs\)/explore.tsx) Tj
+0 -14 Td
+(- question detail screen -> mobile/app/questions/[questionId].tsx) Tj
+0 -14 Td
+(- profile UI -> mobile/app/profile.tsx) Tj
+0 -14 Td
+(- edit profile form -> mobile/app/edit-profile.tsx) Tj
+0 -14 Td
+(- inbox UI -> mobile/app/\(tabs\)/inbox.tsx) Tj
+0 -14 Td
+(- more/settings UI -> mobile/app/\(tabs\)/more.tsx) Tj
+0 -14 Td
+(- admin panel UI -> mobile/app/admin.tsx) Tj
+0 -14 Td
+(- all API calls from app -> mobile/lib/forum-api.ts) Tj
+0 -14 Td
+(- session/auth state -> mobile/lib/auth.tsx) Tj
+0 -14 Td
+(- notification state -> mobile/lib/notifications.tsx) Tj
+0 -14 Td
+(- theme logic -> mobile/lib/appearance.tsx) Tj
+0 -14 Td
+(- backend server startup -> backend/server.js) Tj
+0 -14 Td
+(- backend route wiring -> backend/src/routes/index.js) Tj
+0 -14 Td
+(- auth backend logic -> backend/src/controllers/auth.controller.js) Tj
+0 -14 Td
+(- question backend logic -> backend/src/controllers/questions.controller.js) Tj
+0 -14 Td
+(- answer backend logic -> backend/src/controllers/answers.controller.js) Tj
+0 -14 Td
+(- comment backend logic -> backend/src/controllers/comments.controller.js) Tj
+0 -14 Td
+(- vote backend logic -> backend/src/controllers/votes.controller.js) Tj
+0 -14 Td
+(- notification backend logic -> backend/src/controllers/notifications.controller.js) Tj
+0 -14 Td
+(- AI backend logic -> backend/src/services/ai.service.js) Tj
+0 -14 Td
+(- database connection -> backend/src/config/db.js) Tj
+0 -14 Td
+(- env parsing -> backend/src/config/env.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(HOW TO EXPLAIN THIS PROJECT IN ONE SHORT ANSWER) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(You can describe it like this:) Tj
+ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 29 0 R >> >> /Contents 28 0 R >>
+endobj
+28 0 obj
+<< /Length 1790 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 50 740 Tm
+() Tj
+0 -14 Td
+("This is a mobile Q&A app built with Expo and React Native on the frontend, and Node.js +) Tj
+0 -14 Td
+(Express + MongoDB on the backend. The mobile app uses Expo Router for navigation and a) Tj
+0 -14 Td
+(shared API wrapper to call backend routes. The backend handles auth, questions, answers,) Tj
+0 -14 Td
+(comments, votes, notifications, and an AI code explainer. Appwrite is used for OAuth, magic) Tj
+0 -14 Td
+(links, and password reset, while Cloudinary is used for profile image uploads.") Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(BEST FILES TO LEARN FIRST) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(If you want to understand the app quickly, read these first in this order:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. mobile/lib/forum-api.ts) Tj
+0 -14 Td
+(2. mobile/app/_layout.tsx) Tj
+0 -14 Td
+(3. mobile/app/\(tabs\)/index.tsx) Tj
+0 -14 Td
+(4. mobile/app/\(tabs\)/explore.tsx) Tj
+0 -14 Td
+(5. mobile/app/questions/[questionId].tsx) Tj
+0 -14 Td
+(6. mobile/app/auth.tsx) Tj
+0 -14 Td
+(7. backend/server.js) Tj
+0 -14 Td
+(8. backend/src/routes/index.js) Tj
+0 -14 Td
+(9. backend/src/controllers/auth.controller.js) Tj
+0 -14 Td
+(10. backend/src/controllers/questions.controller.js) Tj
+0 -14 Td
+(11. backend/src/controllers/answers.controller.js) Tj
+0 -14 Td
+(12. backend/src/services/ai.service.js) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(FINAL NOTE) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(If someone asks you "where is this button coded?", usually answer it in 2 steps:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. Find the screen file inside mobile/app or mobile/components) Tj
+0 -14 Td
+(2. If the button calls the backend, trace it through mobile/lib/forum-api.ts into the) Tj
+0 -14 Td
+(matching backend controller) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(That pattern works for almost the whole project.) Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+29 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 30
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000197 00000 n 
+0000000324 00000 n 
+0000002448 00000 n 
+0000002575 00000 n 
+0000004148 00000 n 
+0000004275 00000 n 
+0000006059 00000 n 
+0000006187 00000 n 
+0000008097 00000 n 
+0000008226 00000 n 
+0000010200 00000 n 
+0000010329 00000 n 
+0000012653 00000 n 
+0000012782 00000 n 
+0000014578 00000 n 
+0000014707 00000 n 
+0000016385 00000 n 
+0000016514 00000 n 
+0000017962 00000 n 
+0000018091 00000 n 
+0000019648 00000 n 
+0000019777 00000 n 
+0000021317 00000 n 
+0000021446 00000 n 
+0000023950 00000 n 
+0000024079 00000 n 
+0000025922 00000 n 
+trailer
+<< /Size 30 /Root 1 0 R >>
+startxref
+25993
+%%EOF
