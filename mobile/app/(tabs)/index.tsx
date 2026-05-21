@@ -72,9 +72,10 @@ export default function HomeScreen() {
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTab>('Newest');
   const [feedTabsWidth, setFeedTabsWidth] = useState(0);
   const [pullDistance, setPullDistance] = useState(0);
-  const [fixedHeaderHeight, setFixedHeaderHeight] = useState(0);
+  const [fixedTopBarHeight, setFixedTopBarHeight] = useState(0);
   const feedTabAnimation = useRef(new Animated.Value(0)).current;
   const filterPanelAnimation = useRef(new Animated.Value(0)).current;
+  const filterIconAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     enableLayoutTransitions();
@@ -233,7 +234,7 @@ export default function HomeScreen() {
   const askButtonBottom = floatingTabBarBottom + FLOATING_TAB_BAR_HEIGHT + ASK_BUTTON_GAP;
   const askButtonRight = 16;
   const listBottomPadding = askButtonBottom + 72;
-  const listTopPadding = Math.max(fixedHeaderHeight - 26, 0);
+  const listTopPadding = Math.max(fixedTopBarHeight, 0);
   const utilitySurface = resolvedScheme === 'dark' ? '#172033' : palette.card;
   const utilityBorder = resolvedScheme === 'dark' ? '#334155' : palette.border;
   const utilityText = resolvedScheme === 'dark' ? '#F8FAFC' : palette.text;
@@ -265,6 +266,10 @@ export default function HomeScreen() {
     inputRange: [0, 1],
     outputRange: [0.96, 1],
   });
+  const filterIconRotate = filterIconAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '90deg'],
+  });
   useEffect(() => {
     const nextIndex = FEED_TABS.indexOf(activeFeedTab);
 
@@ -283,14 +288,22 @@ export default function HomeScreen() {
   }, [refreshing]);
 
   useEffect(() => {
-    Animated.spring(filterPanelAnimation, {
-      toValue: filterMenuOpen ? 1 : 0,
-      damping: 18,
-      mass: 0.9,
-      stiffness: 170,
-      useNativeDriver: true,
-    }).start();
-  }, [filterMenuOpen, filterPanelAnimation]);
+    Animated.parallel([
+      Animated.spring(filterPanelAnimation, {
+        toValue: filterMenuOpen ? 1 : 0,
+        damping: 18,
+        mass: 0.9,
+        stiffness: 170,
+        useNativeDriver: true,
+      }),
+      Animated.timing(filterIconAnimation, {
+        toValue: filterMenuOpen ? 1 : 0,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [filterIconAnimation, filterMenuOpen, filterPanelAnimation]);
 
   const toggleSavedFilter = async (filter: string) => {
     const nextFilters = savedFilters.includes(filter)
@@ -329,10 +342,10 @@ export default function HomeScreen() {
       <View
         onLayout={({ nativeEvent }) => {
           const nextHeight = Math.ceil(nativeEvent.layout.height);
-          setFixedHeaderHeight((current) => (current === nextHeight ? current : nextHeight));
+          setFixedTopBarHeight((current) => (current === nextHeight ? current : nextHeight));
         }}
-        style={[styles.fixedHeaderShell, { backgroundColor: palette.hero }]}>
-        <View style={[styles.heroContent, { paddingTop: heroTopPadding }]}>
+        style={[styles.fixedTopBarShell, { backgroundColor: palette.hero }]}>
+        <View style={[styles.topBarContent, { paddingTop: heroTopPadding }]}>
           <View style={styles.topBar}>
             <NexusLogo inverted flushLeft />
             <View style={styles.headerActions}>
@@ -348,7 +361,9 @@ export default function HomeScreen() {
                     borderColor: filterButtonBorder,
                   },
                 ]}>
-                <IconSymbol name="slider.horizontal.3" size={18} color={filterButtonIcon} />
+                <Animated.View style={{ transform: [{ rotate: filterIconRotate }] }}>
+                  <IconSymbol name="slider.horizontal.3" size={18} color={filterButtonIcon} />
+                </Animated.View>
                 {appliedFilterCount > 0 ? (
                   <View
                     style={[
@@ -381,76 +396,6 @@ export default function HomeScreen() {
               </Pressable>
             </View>
           </View>
-
-          <View
-            style={[
-              styles.searchShell,
-              isCompactScreen && styles.searchShellCompact,
-              {
-                backgroundColor: utilitySurface,
-                borderColor: utilityBorder,
-              },
-            ]}>
-            <IconSymbol name="magnifyingglass" size={18} color={searchIconColor} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search questions, tags, users..."
-              placeholderTextColor={searchIconColor}
-              style={[
-                styles.searchInput,
-                isCompactScreen && styles.searchInputCompact,
-                { color: palette.text },
-              ]}
-            />
-          </View>
-          {filterMenuOpen ? (
-            <Animated.View
-              style={[
-                styles.filterDrawer,
-                {
-                  backgroundColor: filterDrawerSurface,
-                  borderColor: utilityBorder,
-                  opacity: filterPanelAnimation,
-                  transform: [{ translateY: filterPanelTranslateY }, { scale: filterPanelScale }],
-                },
-              ]}>
-              <ThemedText style={[styles.filterDrawerTitle, { color: filterDrawerTitleColor }]}>
-                Your feed, tuned on purpose
-              </ThemedText>
-              <ThemedText style={[styles.filterDrawerBody, { color: palette.muted }]}>
-                Save technologies you care about and Nexus will keep the home feed tighter.
-              </ThemedText>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterDrawerList}>
-                {FILTER_OPTIONS.map((filter) => {
-                  const active = savedFilters.includes(filter);
-
-                  return (
-                    <Pressable
-                      key={filter}
-                      onPress={() => void toggleSavedFilter(filter)}
-                      style={[
-                        styles.filterPill,
-                        active
-                          ? { backgroundColor: '#FFF7ED', borderColor: '#FDBA74' }
-                          : { backgroundColor: 'transparent', borderColor: utilityBorder },
-                      ]}>
-                      <ThemedText
-                        style={[
-                          styles.filterPillText,
-                          { color: active ? '#EA580C' : filterDrawerChipText },
-                        ]}>
-                        {filter}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </Animated.View>
-          ) : null}
         </View>
       </View>
       <FlatList
@@ -484,6 +429,79 @@ export default function HomeScreen() {
         }
         ListHeaderComponent={
           <View style={[styles.feedPanel, { backgroundColor: palette.background }]}>
+            <View style={[styles.heroSection, { backgroundColor: palette.hero }]}>
+              <View style={styles.heroSectionInner}>
+                <View
+                  style={[
+                    styles.searchShell,
+                    isCompactScreen && styles.searchShellCompact,
+                    {
+                      backgroundColor: utilitySurface,
+                      borderColor: utilityBorder,
+                    },
+                  ]}>
+                  <IconSymbol name="magnifyingglass" size={18} color={searchIconColor} />
+                  <TextInput
+                    value={query}
+                    onChangeText={setQuery}
+                    placeholder="Search questions, tags, users..."
+                    placeholderTextColor={searchIconColor}
+                    style={[
+                      styles.searchInput,
+                      isCompactScreen && styles.searchInputCompact,
+                      { color: palette.text },
+                    ]}
+                  />
+                </View>
+                {filterMenuOpen ? (
+                  <Animated.View
+                    style={[
+                      styles.filterDrawer,
+                      {
+                        backgroundColor: filterDrawerSurface,
+                        borderColor: utilityBorder,
+                        opacity: filterPanelAnimation,
+                        transform: [{ translateY: filterPanelTranslateY }, { scale: filterPanelScale }],
+                      },
+                    ]}>
+                    <ThemedText style={[styles.filterDrawerTitle, { color: filterDrawerTitleColor }]}>
+                      Your feed, tuned on purpose
+                    </ThemedText>
+                    <ThemedText style={[styles.filterDrawerBody, { color: palette.muted }]}>
+                      Save technologies you care about and Nexus will keep the home feed tighter.
+                    </ThemedText>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.filterDrawerList}>
+                      {FILTER_OPTIONS.map((filter) => {
+                        const active = savedFilters.includes(filter);
+
+                        return (
+                          <Pressable
+                            key={filter}
+                            onPress={() => void toggleSavedFilter(filter)}
+                            style={[
+                              styles.filterPill,
+                              active
+                                ? { backgroundColor: '#FFF7ED', borderColor: '#FDBA74' }
+                                : { backgroundColor: 'transparent', borderColor: utilityBorder },
+                            ]}>
+                            <ThemedText
+                              style={[
+                                styles.filterPillText,
+                                { color: active ? '#EA580C' : filterDrawerChipText },
+                              ]}>
+                              {filter}
+                            </ThemedText>
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+                  </Animated.View>
+                ) : null}
+              </View>
+            </View>
             <View
               style={[
                 styles.feedCard,
@@ -668,11 +686,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 4,
   },
-  fixedHeaderShell: {
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+  fixedTopBarShell: {
     left: 0,
-    paddingBottom: 44,
+    paddingBottom: 14,
     paddingRight: 16,
     position: 'absolute',
     right: 0,
@@ -790,9 +806,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  heroContent: {
+  heroSection: {
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    marginBottom: 10,
+    overflow: 'hidden',
+    paddingBottom: 44,
+    paddingRight: 16,
+  },
+  heroSectionInner: {
     gap: 18,
     paddingLeft: 0,
+    paddingTop: 12,
   },
   headerActions: {
     alignItems: 'center',
@@ -861,6 +886,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingLeft: 0,
+  },
+  topBarContent: {
     paddingLeft: 0,
   },
 });
