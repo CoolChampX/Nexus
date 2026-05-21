@@ -75,7 +75,7 @@ export default function HomeScreen() {
   const [fixedTopBarHeight, setFixedTopBarHeight] = useState(0);
   const feedTabAnimation = useRef(new Animated.Value(0)).current;
   const filterPanelAnimation = useRef(new Animated.Value(0)).current;
-  const filterIconAnimation = useRef(new Animated.Value(0)).current;
+  const filterIconRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     enableLayoutTransitions();
@@ -266,8 +266,8 @@ export default function HomeScreen() {
     inputRange: [0, 1],
     outputRange: [0.96, 1],
   });
-  const filterIconRotate = filterIconAnimation.interpolate({
-    inputRange: [0, 1],
+  const filterIconRotate = filterIconRotation.interpolate({
+    inputRange: [-90, 90],
     outputRange: ['-90deg', '90deg'],
   });
   useEffect(() => {
@@ -288,22 +288,14 @@ export default function HomeScreen() {
   }, [refreshing]);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(filterPanelAnimation, {
-        toValue: filterMenuOpen ? 1 : 0,
-        damping: 18,
-        mass: 0.9,
-        stiffness: 170,
-        useNativeDriver: true,
-      }),
-      Animated.timing(filterIconAnimation, {
-        toValue: filterMenuOpen ? 1 : 0,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [filterIconAnimation, filterMenuOpen, filterPanelAnimation]);
+    Animated.spring(filterPanelAnimation, {
+      toValue: filterMenuOpen ? 1 : 0,
+      damping: 18,
+      mass: 0.9,
+      stiffness: 170,
+      useNativeDriver: true,
+    }).start();
+  }, [filterMenuOpen, filterPanelAnimation]);
 
   const toggleSavedFilter = async (filter: string) => {
     const nextFilters = savedFilters.includes(filter)
@@ -319,6 +311,19 @@ export default function HomeScreen() {
       setSavedFilters(savedFilters);
       setError(nextError instanceof Error ? nextError.message : 'Could not save filters');
     }
+  };
+
+  const toggleFilterMenu = () => {
+    const nextOpen = !filterMenuOpen;
+
+    animateLayoutTransition();
+    setFilterMenuOpen(nextOpen);
+    Animated.timing(filterIconRotation, {
+      toValue: nextOpen ? 90 : -90,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
   };
 
   if (loading || !ready || isRefreshingSession) {
@@ -350,10 +355,7 @@ export default function HomeScreen() {
             <NexusLogo inverted flushLeft />
             <View style={styles.headerActions}>
               <Pressable
-                onPress={() => {
-                  animateLayoutTransition();
-                  setFilterMenuOpen((current) => !current);
-                }}
+                onPress={toggleFilterMenu}
                 style={[
                   styles.iconOnlyButton,
                   {
