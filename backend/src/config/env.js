@@ -16,6 +16,14 @@ const parseCsv = (value) =>
 export const env = {
   port: process.env.PORT || 5000,
   clientUrl: process.env.CLIENT_URL || "http://localhost:8081",
+  clientUrls: Array.from(
+    new Set(
+      [
+        process.env.CLIENT_URL || "http://localhost:8081",
+        "http://localhost:5173"
+      ].filter(Boolean)
+    )
+  ),
   publicBackendUrl: process.env.PUBLIC_BACKEND_URL || "",
   mongodbUri: process.env.MONGODB_URI || "",
   mongodbUriFallback: process.env.MONGODB_URI_FALLBACK || "",
